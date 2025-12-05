@@ -1,7 +1,7 @@
--- Interactive DAO operations for live ledger
--- Run these with: daml script --dar .daml/dist/dao-maker-1.0.0.dar --script-name Interactive:scriptName --ledger-host localhost --ledger-port 6865
+-- Working Interactive DAO operations for live ledger with daml start
+-- These scripts work with parties already allocated by daml start
 
-module Interactive where
+module WorkingInteractive where
 
 import Daml.Script
 import GovernanceToken
@@ -9,14 +9,40 @@ import Staking
 import Governance
 import DAOSetup
 import DA.List (head)
+import DA.Text qualified as T
 
--- Query existing parties and create DAO
+-- Get existing party by hint - doesn't allocate if not found
+getExistingParty : Text -> Script Party
+getExistingParty hint = do
+  allParties <- listKnownParties
+  debug $ "Looking for party with hint: " <> hint
+  debug $ "All known parties: " <> show (map (\p -> show p.party) allParties)
+  
+  -- First try: exact match on party ID string representation
+  let exactMatches = filter (\p -> show p.party == hint) allParties
+  case exactMatches of
+    (p :: _) -> do
+      debug $ "Found exact match: " <> show p.party
+      return p.party
+    [] -> do
+      -- Second try: substring match on party ID
+      let substringMatches = filter (\p -> T.isInfixOf hint (show p.party)) allParties
+      case substringMatches of
+        (p :: _) -> do
+          debug $ "Found substring match: " <> show p.party
+          return p.party
+        [] -> do
+          debug $ "No party found for hint: " <> hint <> ", using allocatePartyWithHint"
+          allocatePartyWithHint hint (PartyIdHint hint)
+
+-- 1. Setup DAO - Run this first
 setupDAO : Script ()
 setupDAO = script do
-  -- Get existing parties
-  dao <- allocatePartyOn "DAO" (ParticipantName "sandbox")
-  alice <- allocatePartyOn "Alice" (ParticipantName "sandbox")
-  bob <- allocatePartyOn "Bob" (ParticipantName "sandbox")
+  dao <- getExistingParty "DAO"
+  alice <- getExistingParty "Alice"
+  bob <- getExistingParty "Bob"
+  
+  debug $ "Using parties: DAO=" <> show dao <> ", Alice=" <> show alice <> ", Bob=" <> show bob
   
   -- Create DAO configuration
   configCid <- submit dao do
@@ -38,15 +64,16 @@ setupDAO = script do
   debug $ "Pool: " <> show poolCid
   debug $ "Treasury: " <> show treasuryCid
 
--- Issue tokens to members
+-- 2. Issue tokens to members
 issueTokens : Script ()
 issueTokens = script do
-  dao <- allocatePartyOn "DAO" (ParticipantName "sandbox")
-  alice <- allocatePartyOn "Alice" (ParticipantName "sandbox")
-  bob <- allocatePartyOn "Bob" (ParticipantName "sandbox")
+  dao <- getExistingParty "DAO"
+  alice <- getExistingParty "Alice"
+  bob <- getExistingParty "Bob"
   
   -- Find admin contract
   adminContracts <- query @DAOAdmin dao
+  assertMsg "No admin contract found. Run setupDAO first." (not $ null adminContracts)
   let adminCid = fst (head adminContracts)
   
   -- Issue to Alice
@@ -65,18 +92,20 @@ issueTokens = script do
   debug $ "Alice: " <> show aliceToken
   debug $ "Bob: " <> show bobToken
 
--- Alice stakes tokens
+-- 3. Alice stakes tokens
 aliceStakes : Script ()
 aliceStakes = script do
-  dao <- allocatePartyOn "DAO" (ParticipantName "sandbox")
-  alice <- allocatePartyOn "Alice" (ParticipantName "sandbox")
+  dao <- getExistingParty "DAO"
+  alice <- getExistingParty "Alice"
   
   -- Find pool
   poolContracts <- query @StakingPool dao
+  assertMsg "No staking pool found. Run setupDAO first." (not $ null poolContracts)
   let poolCid = fst (head poolContracts)
   
   -- Find Alice's token
   tokenContracts <- query @GovernanceToken alice
+  assertMsg "Alice has no tokens. Run issueTokens first." (not $ null tokenContracts)
   let tokenCid = fst (head tokenContracts)
   
   -- Stake
@@ -88,12 +117,37 @@ aliceStakes = script do
   debug "✅ Alice staked tokens!"
   debug $ "Stake: " <> show stakeCid
 
--- Create a proposal
+-- 4. Bob stakes tokens
+bobStakes : Script ()
+bobStakes = script do
+  dao <- getExistingParty "DAO"
+  bob <- getExistingParty "Bob"
+  
+  -- Find pool
+  poolContracts <- query @StakingPool dao
+  assertMsg "No staking pool found. Run setupDAO first." (not $ null poolContracts)
+  let poolCid = fst (head poolContracts)
+  
+  -- Find Bob's token
+  tokenContracts <- query @GovernanceToken bob
+  assertMsg "Bob has no tokens. Run issueTokens first." (not $ null tokenContracts)
+  let tokenCid = fst (head tokenContracts)
+  
+  -- Stake
+  stakeCid <- submitMulti [bob] [dao] do
+    exerciseCmd poolCid Stake with
+      staker = bob
+      tokenCid = tokenCid
+  
+  debug "✅ Bob staked tokens!"
+  debug $ "Stake: " <> show stakeCid
+
+-- 5. Create a proposal
 createProposal : Script ()
 createProposal = script do
-  dao <- allocatePartyOn "DAO" (ParticipantName "sandbox")
-  alice <- allocatePartyOn "Alice" (ParticipantName "sandbox")
-  bob <- allocatePartyOn "Bob" (ParticipantName "sandbox")
+  dao <- getExistingParty "DAO"
+  alice <- getExistingParty "Alice"
+  bob <- getExistingParty "Bob"
   
   -- Find treasury
   treasuryContracts <- query @Treasury dao
@@ -123,18 +177,20 @@ createProposal = script do
   debug "✅ Proposal created!"
   debug $ "Proposal: " <> show proposalCid
 
--- Alice votes on proposal
+-- 6. Alice votes on proposal
 aliceVotes : Script ()
 aliceVotes = script do
-  dao <- allocatePartyOn "DAO" (ParticipantName "sandbox")
-  alice <- allocatePartyOn "Alice" (ParticipantName "sandbox")
+  dao <- getExistingParty "DAO"
+  alice <- getExistingParty "Alice"
   
   -- Find proposal
   proposalContracts <- query @Proposal dao
+  assertMsg "No proposal found. Run createProposal first." (not $ null proposalContracts)
   let proposalCid = fst (head proposalContracts)
   
   -- Find Alice's stake
   stakeContracts <- query @StakedPosition alice
+  assertMsg "Alice has no stake. Run aliceStakes first." (not $ null stakeContracts)
   let stakeCid = fst (head stakeContracts)
   
   -- Vote
@@ -147,18 +203,20 @@ aliceVotes = script do
   debug "✅ Alice voted!"
   debug $ "Updated proposal: " <> show newProposalCid
 
--- Bob votes on proposal
+-- 7. Bob votes on proposal
 bobVotes : Script ()
 bobVotes = script do
-  dao <- allocatePartyOn "DAO" (ParticipantName "sandbox")
-  bob <- allocatePartyOn "Bob" (ParticipantName "sandbox")
+  dao <- getExistingParty "DAO"
+  bob <- getExistingParty "Bob"
   
   -- Find proposal
   proposalContracts <- query @Proposal dao
+  assertMsg "No proposal found. Run createProposal first." (not $ null proposalContracts)
   let proposalCid = fst (head proposalContracts)
   
   -- Find Bob's stake
   stakeContracts <- query @StakedPosition bob
+  assertMsg "Bob has no stake. Run bobStakes first." (not $ null stakeContracts)
   let stakeCid = fst (head stakeContracts)
   
   -- Vote
@@ -171,12 +229,12 @@ bobVotes = script do
   debug "✅ Bob voted!"
   debug $ "Updated proposal: " <> show newProposalCid
 
--- View DAO status
+-- 8. View DAO status
 viewStatus : Script ()
 viewStatus = script do
-  dao <- allocatePartyOn "DAO" (ParticipantName "sandbox")
-  alice <- allocatePartyOn "Alice" (ParticipantName "sandbox")
-  bob <- allocatePartyOn "Bob" (ParticipantName "sandbox")
+  dao <- getExistingParty "DAO"
+  alice <- getExistingParty "Alice"
+  bob <- getExistingParty "Bob"
   
   -- Query all contracts
   admins <- query @DAOAdmin dao
@@ -197,3 +255,28 @@ viewStatus = script do
   debug $ "Bob tokens: " <> show (length bobTokens)
   debug $ "Alice stakes: " <> show (length aliceStakes)
   debug $ "Bob stakes: " <> show (length bobStakes)
+
+-- Complete workflow - Run everything in sequence
+completeWorkflow : Script ()
+completeWorkflow = script do
+  debug "Starting complete DAO workflow..."
+  
+  setupDAO
+  debug "\n--- Setup complete ---\n"
+  
+  issueTokens
+  debug "\n--- Tokens issued ---\n"
+  
+  aliceStakes
+  bobStakes
+  debug "\n--- Staking complete ---\n"
+  
+  createProposal
+  debug "\n--- Proposal created ---\n"
+  
+  aliceVotes
+  bobVotes
+  debug "\n--- Voting complete ---\n"
+  
+  viewStatus
+  debug "\n✅ Complete workflow finished successfully!"
