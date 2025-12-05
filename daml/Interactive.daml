@@ -1,0 +1,199 @@
+-- Interactive DAO operations for live ledger
+-- Run these with: daml script --dar .daml/dist/dao-maker-1.0.0.dar --script-name Interactive:scriptName --ledger-host localhost --ledger-port 6865
+
+module Interactive where
+
+import Daml.Script
+import GovernanceToken
+import Staking
+import Governance
+import DAOSetup
+import DA.List (head)
+
+-- Query existing parties and create DAO
+setupDAO : Script ()
+setupDAO = script do
+  -- Get existing parties
+  dao <- allocatePartyOn "DAO" (ParticipantName "sandbox")
+  alice <- allocatePartyOn "Alice" (ParticipantName "sandbox")
+  bob <- allocatePartyOn "Bob" (ParticipantName "sandbox")
+  
+  -- Create DAO configuration
+  configCid <- submit dao do
+    createCmd DAOConfig with
+      dao = dao
+      daoName = "Production DAO"
+      tokenSymbol = "PDAO"
+      initialTreasuryBalance = 10000.0
+      defaultQuorum = 100.0
+      defaultVotingPeriodDays = 7
+      members = [alice, bob]
+  
+  -- Initialize DAO
+  (adminCid, poolCid, treasuryCid) <- submit dao do
+    exerciseCmd configCid InitializeDAO
+  
+  debug "✅ DAO Created!"
+  debug $ "Admin: " <> show adminCid
+  debug $ "Pool: " <> show poolCid
+  debug $ "Treasury: " <> show treasuryCid
+
+-- Issue tokens to members
+issueTokens : Script ()
+issueTokens = script do
+  dao <- allocatePartyOn "DAO" (ParticipantName "sandbox")
+  alice <- allocatePartyOn "Alice" (ParticipantName "sandbox")
+  bob <- allocatePartyOn "Bob" (ParticipantName "sandbox")
+  
+  -- Find admin contract
+  adminContracts <- query @DAOAdmin dao
+  let adminCid = fst (head adminContracts)
+  
+  -- Issue to Alice
+  aliceToken <- submit dao do
+    exerciseCmd adminCid IssueTokens with
+      recipient = alice
+      amount = 1000.0
+  
+  -- Issue to Bob
+  bobToken <- submit dao do
+    exerciseCmd adminCid IssueTokens with
+      recipient = bob
+      amount = 800.0
+  
+  debug "✅ Tokens Issued!"
+  debug $ "Alice: " <> show aliceToken
+  debug $ "Bob: " <> show bobToken
+
+-- Alice stakes tokens
+aliceStakes : Script ()
+aliceStakes = script do
+  dao <- allocatePartyOn "DAO" (ParticipantName "sandbox")
+  alice <- allocatePartyOn "Alice" (ParticipantName "sandbox")
+  
+  -- Find pool
+  poolContracts <- query @StakingPool dao
+  let poolCid = fst (head poolContracts)
+  
+  -- Find Alice's token
+  tokenContracts <- query @GovernanceToken alice
+  let tokenCid = fst (head tokenContracts)
+  
+  -- Stake
+  stakeCid <- submitMulti [alice] [dao] do
+    exerciseCmd poolCid Stake with
+      staker = alice
+      tokenCid = tokenCid
+  
+  debug "✅ Alice staked tokens!"
+  debug $ "Stake: " <> show stakeCid
+
+-- Create a proposal
+createProposal : Script ()
+createProposal = script do
+  dao <- allocatePartyOn "DAO" (ParticipantName "sandbox")
+  alice <- allocatePartyOn "Alice" (ParticipantName "sandbox")
+  bob <- allocatePartyOn "Bob" (ParticipantName "sandbox")
+  
+  -- Find treasury
+  treasuryContracts <- query @Treasury dao
+  let treasuryCid = if null treasuryContracts 
+                    then None 
+                    else Some (fst (head treasuryContracts))
+  
+  -- Create proposal
+  proposalReqCid <- submit alice do
+    createCmd ProposalRequest with
+      dao = dao
+      proposer = alice
+      proposalId = "PROP-001"
+      title = "Fund Community Event"
+      description = "Allocate 500 PDAO for community hackathon"
+      payload = "transfer:community:500"
+      action = CustomAction with actionData = "community_event"
+      quorumRequired = 100.0
+      votingPeriodDays = 7
+      treasuryCid = treasuryCid
+      eligibleVoters = [alice, bob]
+  
+  -- DAO approves
+  proposalCid <- submit dao do
+    exerciseCmd proposalReqCid ApproveProposal
+  
+  debug "✅ Proposal created!"
+  debug $ "Proposal: " <> show proposalCid
+
+-- Alice votes on proposal
+aliceVotes : Script ()
+aliceVotes = script do
+  dao <- allocatePartyOn "DAO" (ParticipantName "sandbox")
+  alice <- allocatePartyOn "Alice" (ParticipantName "sandbox")
+  
+  -- Find proposal
+  proposalContracts <- query @Proposal dao
+  let proposalCid = fst (head proposalContracts)
+  
+  -- Find Alice's stake
+  stakeContracts <- query @StakedPosition alice
+  let stakeCid = fst (head stakeContracts)
+  
+  -- Vote
+  newProposalCid <- submit alice do
+    exerciseCmd proposalCid CastVote with
+      voter = alice
+      stakeCid = stakeCid
+      inFavor = True
+  
+  debug "✅ Alice voted!"
+  debug $ "Updated proposal: " <> show newProposalCid
+
+-- Bob votes on proposal
+bobVotes : Script ()
+bobVotes = script do
+  dao <- allocatePartyOn "DAO" (ParticipantName "sandbox")
+  bob <- allocatePartyOn "Bob" (ParticipantName "sandbox")
+  
+  -- Find proposal
+  proposalContracts <- query @Proposal dao
+  let proposalCid = fst (head proposalContracts)
+  
+  -- Find Bob's stake
+  stakeContracts <- query @StakedPosition bob
+  let stakeCid = fst (head stakeContracts)
+  
+  -- Vote
+  newProposalCid <- submit bob do
+    exerciseCmd proposalCid CastVote with
+      voter = bob
+      stakeCid = stakeCid
+      inFavor = True
+  
+  debug "✅ Bob voted!"
+  debug $ "Updated proposal: " <> show newProposalCid
+
+-- View DAO status
+viewStatus : Script ()
+viewStatus = script do
+  dao <- allocatePartyOn "DAO" (ParticipantName "sandbox")
+  alice <- allocatePartyOn "Alice" (ParticipantName "sandbox")
+  bob <- allocatePartyOn "Bob" (ParticipantName "sandbox")
+  
+  -- Query all contracts
+  admins <- query @DAOAdmin dao
+  pools <- query @StakingPool dao
+  treasuries <- query @Treasury dao
+  proposals <- query @Proposal dao
+  aliceTokens <- query @GovernanceToken alice
+  bobTokens <- query @GovernanceToken bob
+  aliceStakes <- query @StakedPosition alice
+  bobStakes <- query @StakedPosition bob
+  
+  debug "=== DAO STATUS ==="
+  debug $ "Admins: " <> show (length admins)
+  debug $ "Pools: " <> show (length pools)
+  debug $ "Treasuries: " <> show (length treasuries)
+  debug $ "Proposals: " <> show (length proposals)
+  debug $ "Alice tokens: " <> show (length aliceTokens)
+  debug $ "Bob tokens: " <> show (length bobTokens)
+  debug $ "Alice stakes: " <> show (length aliceStakes)
+  debug $ "Bob stakes: " <> show (length bobStakes)

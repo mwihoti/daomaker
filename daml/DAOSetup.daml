@@ -1,0 +1,112 @@
+-- DAO Setup and Initialization
+-- Main orchestration module for setting up the complete DAO
+
+module DAOSetup where
+
+import GovernanceToken
+import Staking
+import Governance
+import DA.Time
+
+-- Main DAO configuration
+template DAOConfig
+  with
+    dao : Party
+    daoName : Text
+    tokenSymbol : Text
+    initialTreasuryBalance : Decimal
+    defaultQuorum : Decimal
+    defaultVotingPeriodDays : Int
+    members : [Party]
+  where
+    signatory dao
+    observer members
+
+    -- Initialize complete DAO system
+    choice InitializeDAO : (ContractId DAOAdmin, ContractId StakingPool, ContractId Treasury)
+      controller dao
+      do
+        -- Create admin contract
+        adminCid <- create DAOAdmin with
+          admin = dao
+          daoName = daoName
+          tokenSymbol = tokenSymbol
+          members = members
+
+        -- Create staking pool
+        poolCid <- create StakingPool with
+          dao = dao
+          tokenSymbol = tokenSymbol
+          totalStaked = 0.0
+          stakers = []
+
+        -- Create treasury
+        treasuryCid <- create Treasury with
+          dao = dao
+          balance = initialTreasuryBalance
+          tokenSymbol = tokenSymbol
+          beneficiaries = []
+
+        return (adminCid, poolCid, treasuryCid)
+
+-- DAO Member invitation
+template DAOMemberInvitation
+  with
+    dao : Party
+    invitee : Party
+    daoName : Text
+    initialTokenAllocation : Decimal
+  where
+    signatory dao
+    observer invitee
+
+    choice AcceptInvitation : (ContractId GovernanceToken)
+      with
+        adminCid : ContractId DAOAdmin
+      controller invitee
+      do
+        -- Issue initial tokens
+        tokenCid <- exercise adminCid IssueTokens with
+          recipient = invitee
+          amount = initialTokenAllocation
+
+        -- Add to members
+        exercise adminCid AddMember with
+          newMember = invitee
+
+        return tokenCid
+
+    choice DeclineInvitation : ()
+      controller invitee
+      do
+        return ()
+
+-- Governance stats (read-only view)
+template GovernanceStats
+  with
+    dao : Party
+    totalTokenSupply : Decimal
+    totalStaked : Decimal
+    activeProposals : Int
+    executedProposals : Int
+    treasuryBalance : Decimal
+    lastUpdated : Time
+  where
+    signatory dao
+
+    -- Update stats (will be called periodically or after major events)
+    choice UpdateStats : ContractId GovernanceStats
+      with
+        newTotalStaked : Decimal
+        newActiveProposals : Int
+        newExecutedProposals : Int
+        newTreasuryBalance : Decimal
+      controller dao
+      do
+        currentTime <- getTime
+        create this with
+          totalStaked = newTotalStaked
+          activeProposals = newActiveProposals
+          executedProposals = newExecutedProposals
+          treasuryBalance = newTreasuryBalance
+          lastUpdated = currentTime

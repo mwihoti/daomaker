@@ -1,0 +1,274 @@
+-- Governance and Proposal Module
+-- Create proposals, vote, and execute based on quorum
+
+module Governance where
+
+import GovernanceToken
+import Staking
+import DA.Time
+
+-- Vote record
+data Vote = Vote
+  with
+    voter : Party
+    votingPower : Decimal
+    inFavor : Bool
+  deriving (Eq, Show)
+
+-- Proposal status
+data ProposalStatus = Active | Passed | Rejected | Executed
+  deriving (Eq, Show)
+
+-- Proposal action type
+data ProposalAction
+  = TransferFunds with recipient : Party; amount : Decimal
+  | DistributeYield with percentage : Decimal
+  | UpdateParameter with paramName : Text; paramValue : Text
+  | CustomAction with actionData : Text
+  deriving (Eq, Show)
+
+-- Main proposal template
+template Proposal
+  with
+    dao : Party
+    proposalId : Text
+    proposer : Party
+    title : Text
+    description : Text
+    payload : Text
+    action : ProposalAction
+    quorumRequired : Decimal
+    endTime : Time
+    createdAt : Time
+    votes : [Vote]
+    status : ProposalStatus
+    treasuryCid : Optional (ContractId Treasury)
+    eligibleVoters : [Party]  -- Added to track who can vote
+  where
+    signatory dao
+    observer proposer :: map (\v -> v.voter) votes ++ eligibleVoters
+
+    ensure quorumRequired > 0.0 && quorumRequired <= 100.0
+
+    -- Cast a vote
+    choice CastVote : ContractId Proposal
+      with
+        voter : Party
+        stakeCid : ContractId StakedPosition
+        inFavor : Bool
+      controller voter
+      do
+        currentTime <- getTime
+        assertMsg "Proposal voting has ended" (currentTime < endTime)
+        assertMsg "Proposal is not active" (status == Active)
+        assertMsg "Already voted" (not $ any (\v -> v.voter == voter) votes)
+        
+        stake <- fetch stakeCid
+        assertMsg "Stake must belong to voter" (stake.staker == voter)
+        assertMsg "Stake must belong to this DAO" (stake.dao == dao)
+        
+        -- Lock the stake until proposal ends
+        exercise stakeCid LockStake with lockUntilTime = endTime
+        
+        let vote = Vote with
+              voter = voter
+              votingPower = stake.amount
+              inFavor = inFavor
+        
+        create this with votes = vote :: votes
+
+    -- Finalize proposal after endTime
+    choice FinalizeProposal : ContractId Proposal
+      with
+        currentTime : Time
+      controller dao
+      do
+        assertMsg "Proposal has not ended yet" (currentTime >= endTime)
+        assertMsg "Proposal already finalized" (status == Active)
+        
+        let totalVotesFor = foldl (+) 0.0 [v.votingPower | v <- votes, v.inFavor]
+        let totalVotesAgainst = foldl (+) 0.0 [v.votingPower | v <- votes, not v.inFavor]
+        let totalVotes = totalVotesFor + totalVotesAgainst
+        let totalVotingPower = totalVotes  -- In real scenario, get from total staked
+        
+        -- Simple quorum: votes cast must meet quorum percentage
+        let quorumMet = totalVotesFor >= quorumRequired
+        let newStatus = if quorumMet && totalVotesFor > totalVotesAgainst then Passed else Rejected
+        
+        create this with status = newStatus
+
+    -- Execute proposal (if passed)
+    choice ExecuteProposal : (ContractId Proposal, Optional (ContractId Treasury))
+      with
+        currentTime : Time
+      controller dao
+      do
+        assertMsg "Proposal must be passed to execute" (status == Passed)
+        
+        -- Execute the action based on type
+        newTreasuryCid <- case action of
+          TransferFunds recipient amount -> do
+            case treasuryCid of
+              Some tcid -> do
+                treasury <- fetch tcid
+                newTcid <- exercise tcid TransferFromTreasury with
+                  recipient = recipient
+                  amount = amount
+                  reason = "Proposal: " <> proposalId
+                return (Some newTcid)
+              None -> return None
+          
+          DistributeYield percentage -> do
+            case treasuryCid of
+              Some tcid -> do
+                newTcid <- exercise tcid DistributeYieldToStakers with
+                  distributionPercentage = percentage
+                return (Some newTcid)
+              None -> return None
+          
+          UpdateParameter paramName paramValue -> do
+            -- Just emit the flag, no treasury update
+            return treasuryCid
+          
+          CustomAction actionData -> do
+            -- Custom action, treasury remains same
+            return treasuryCid
+        
+        updatedProposal <- create this with 
+          status = Executed
+          treasuryCid = newTreasuryCid
+        
+        return (updatedProposal, newTreasuryCid)
+
+    -- Cancel proposal (by proposer or DAO, before voting ends)
+    choice CancelProposal : ()
+      with
+        currentTime : Time
+        canceller : Party
+      controller canceller
+      do
+        assertMsg "Only proposer or DAO can cancel" (canceller == proposer || canceller == dao)
+        assertMsg "Cannot cancel after voting ended" (currentTime < endTime)
+        return ()
+
+-- Proposal creation request
+template ProposalRequest
+  with
+    dao : Party
+    proposer : Party
+    proposalId : Text
+    title : Text
+    description : Text
+    payload : Text
+    action : ProposalAction
+    quorumRequired : Decimal
+    votingPeriodDays : Int
+    treasuryCid : Optional (ContractId Treasury)
+    eligibleVoters : [Party]  -- Added
+  where
+    signatory proposer
+    observer dao
+
+    choice ApproveProposal : ContractId Proposal
+      controller dao
+      do
+        currentTime <- getTime
+        let endTime = addRelTime currentTime (days votingPeriodDays)
+        
+        create Proposal with
+          dao = dao
+          proposalId = proposalId
+          proposer = proposer
+          title = title
+          description = description
+          payload = payload
+          action = action
+          quorumRequired = quorumRequired
+          endTime = endTime
+          createdAt = currentTime
+          votes = []
+          status = Active
+          treasuryCid = treasuryCid
+          eligibleVoters = eligibleVoters
+
+    choice RejectProposal : ()
+      controller dao
+      do
+        return ()
+
+-- Treasury template (referenced by proposals)
+template Treasury
+  with
+    dao : Party
+    balance : Decimal
+    tokenSymbol : Text
+    beneficiaries : [Party]
+  where
+    signatory dao
+
+    ensure balance >= 0.0
+
+    -- Deposit funds into treasury
+    choice DepositToTreasury : ContractId Treasury
+      with
+        depositor : Party
+        tokenCid : ContractId GovernanceToken
+      controller dao, depositor
+      do
+        token <- fetch tokenCid
+        assertMsg "Token issuer must be DAO" (token.issuer == dao)
+        assertMsg "Token owner must be depositor" (token.owner == depositor)
+        assertMsg "Token symbol must match" (token.symbol == tokenSymbol)
+        
+        exercise tokenCid Archive
+        create this with balance = balance + token.amount
+
+    -- Transfer from treasury (called by executed proposal)
+    choice TransferFromTreasury : ContractId Treasury
+      with
+        recipient : Party
+        amount : Decimal
+        reason : Text
+      controller dao
+      do
+        assertMsg "Insufficient treasury balance" (balance >= amount)
+        
+        -- Create token for recipient
+        create GovernanceToken with
+          issuer = dao
+          owner = recipient
+          amount = amount
+          symbol = tokenSymbol
+        
+        -- Update treasury balance
+        create this with balance = balance - amount
+
+    -- Distribute yield to stakers (simplified)
+    choice DistributeYieldToStakers : ContractId Treasury
+      with
+        distributionPercentage : Decimal
+      controller dao
+      do
+        assertMsg "Distribution percentage must be between 0 and 100" 
+          (distributionPercentage > 0.0 && distributionPercentage <= 100.0)
+        
+        let distributionAmount = balance * distributionPercentage / 100.0
+        
+        -- In a real implementation, you would:
+        -- 1. Query all staked positions
+        -- 2. Calculate pro-rata distribution
+        -- 3. Create tokens for each staker
+        
+        -- For this demo, we just reduce the balance
+        create this with balance = balance - distributionAmount
+
+    -- Add beneficiary
+    choice AddBeneficiary : ContractId Treasury
+      with
+        newBeneficiary : Party
+      controller dao
+      do
+        let updatedBeneficiaries = if newBeneficiary `elem` beneficiaries 
+                                   then beneficiaries 
+                                   else newBeneficiary :: beneficiaries
+        create this with beneficiaries = updatedBeneficiaries

@@ -1,0 +1,155 @@
+-- Staking Module
+-- Users stake governance tokens to gain voting power
+
+module Staking where
+
+import GovernanceToken
+import DA.Time
+import DA.Date
+
+-- Represents a staked position
+template StakedPosition
+  with
+    dao : Party
+    staker : Party
+    amount : Decimal
+    stakedAt : Time
+    tokenSymbol : Text
+    lockedUntil : Optional Time
+  where
+    signatory dao, staker
+
+    ensure amount > 0.0
+
+    -- Increase stake by adding more tokens
+    choice IncreaseStake : ContractId StakedPosition
+      with
+        tokenCid : ContractId GovernanceToken
+      controller staker
+      do
+        token <- fetch tokenCid
+        assertMsg "Token owner must be staker" (token.owner == staker)
+        assertMsg "Token issuer must be DAO" (token.issuer == dao)
+        assertMsg "Token symbol must match" (token.symbol == tokenSymbol)
+        
+        exercise tokenCid Archive
+        create this with amount = amount + token.amount
+
+    -- Decrease stake (if not locked)
+    choice DecreaseStake : (ContractId StakedPosition, ContractId GovernanceToken)
+      with
+        withdrawAmount : Decimal
+        currentTime : Time
+      controller staker
+      do
+        assertMsg "Withdraw amount must be positive" (withdrawAmount > 0.0)
+        assertMsg "Insufficient staked amount" (withdrawAmount <= amount)
+        
+        -- Check if position is locked
+        case lockedUntil of
+          Some lockTime -> assertMsg "Position is locked due to active voting" (currentTime >= lockTime)
+          None -> return ()
+        
+        tokenCid <- create GovernanceToken with
+          issuer = dao
+          owner = staker
+          amount = withdrawAmount
+          symbol = tokenSymbol
+        
+        if withdrawAmount == amount
+        then do
+          return (self, tokenCid)  -- Will be archived by caller
+        else do
+          newStakeCid <- create this with amount = amount - withdrawAmount
+          return (newStakeCid, tokenCid)
+
+    -- Fully unstake (if not locked)
+    choice Unstake : ContractId GovernanceToken
+      with
+        currentTime : Time
+      controller staker
+      do
+        -- Check if position is locked
+        case lockedUntil of
+          Some lockTime -> assertMsg "Position is locked due to active voting" (currentTime >= lockTime)
+          None -> return ()
+        
+        create GovernanceToken with
+          issuer = dao
+          owner = staker
+          amount = amount
+          symbol = tokenSymbol
+
+    -- Lock stake (used when voting on proposal)
+    choice LockStake : ContractId StakedPosition
+      with
+        lockUntilTime : Time
+      controller dao
+      do
+        let newLockTime = case lockedUntil of
+              Some existingLock -> Some (max existingLock lockUntilTime)
+              None -> Some lockUntilTime
+        create this with lockedUntil = newLockTime
+
+    -- Unlock stake (called after proposal ends)
+    choice UnlockStake : ContractId StakedPosition
+      controller dao
+      do
+        create this with lockedUntil = None
+
+    -- Query voting power
+    nonconsuming choice GetVotingPower : Decimal
+      controller staker
+      do
+        return amount
+
+-- Staking pool for the DAO
+template StakingPool
+  with
+    dao : Party
+    tokenSymbol : Text
+    totalStaked : Decimal
+    stakers : [Party]
+  where
+    signatory dao
+
+    -- Accept tokens for staking (public access)
+    nonconsuming choice Stake : ContractId StakedPosition
+      with
+        staker : Party
+        tokenCid : ContractId GovernanceToken
+      controller staker
+      do
+        token <- fetch tokenCid
+        assertMsg "Token owner must be staker" (token.owner == staker)
+        assertMsg "Token issuer must be DAO" (token.issuer == dao)
+        assertMsg "Token symbol must match" (token.symbol == tokenSymbol)
+        
+        currentTime <- getTime
+        exercise tokenCid Archive
+        
+        create StakedPosition with
+          dao = dao
+          staker = staker
+          amount = token.amount
+          stakedAt = currentTime
+          tokenSymbol = tokenSymbol
+          lockedUntil = None
+
+-- Staking request (alternative flow)
+template StakingRequest
+  with
+    dao : Party
+    staker : Party
+    tokenCid : ContractId GovernanceToken
+    poolCid : ContractId StakingPool
+  where
+    signatory staker
+    observer dao
+
+    choice ExecuteStake : ContractId StakedPosition
+      controller dao
+      do
+        exercise poolCid Stake with
+          staker = staker
+          tokenCid = tokenCid
