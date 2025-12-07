@@ -348,41 +348,265 @@ daml script \
   --ledger-port 6865
 ```
 
-## 📚 References
+## 🛠️ Build & Run Commands
 
-- [Canton Documentation](https://docs.digitalasset.com/build/3.4/quickstart/operate/explore-the-demo.html)
-- [Daml Tutorials](https://www.youtube.com/watch?v=xsuMDLED6gI&t=34s)
-- [Daml Language Reference](https://docs.daml.com/)
+### Quick Start (One Command)
 
-## 🤝 Contributing
+```bash
+# Build, start sandbox, deploy DARs, and run complete workflow
+daml build && \
+cd scripts && daml build && cd .. && \
+pkill -f "daml sandbox" || true && sleep 3 && \
+daml sandbox --port 6865 --json-api-port 7575 &
+sleep 10 && \
+daml ledger upload-dar .daml/dist/dao-maker-1.0.0.dar --host localhost --port 6865 && \
+daml ledger upload-dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar --host localhost --port 6865 && \
+daml script --dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar \
+  --script-name WorkingInteractive:testCompleteWorkflow \
+  --ledger-host localhost --ledger-port 6865 2>&1 | tail -80
+```
 
-This is a complete reference implementation. To extend:
-- Add more proposal action types
-- Implement delegation
-- Add time-weighted voting
-- Create automated triggers
-- Add multi-sig requirements
+### Step-by-Step Commands
 
-## 📝 License
+#### 1️⃣ Build Phase
 
-This project is provided as-is for educational and production use on Canton Network.
+```bash
+# Build core DAO templates
+daml build
 
-## ✅ Implementation Checklist
+# Build test scripts
+cd scripts
+daml build
+cd ..
+```
 
-- [x] Governance token with full operations
-- [x] Staking system with locking mechanism
-- [x] Proposal creation and approval workflow
-- [x] Voting with stake-based power
-- [x] Quorum and time-based finalization
-- [x] Automatic execution of passed proposals
-- [x] Treasury with deposit/transfer/yield distribution
-- [x] Complete DAO initialization
-- [x] Member invitation system
-- [x] Comprehensive test suite
-- [x] No database dependencies
-- [x] No frontend requirements
-- [x] Fully on-chain implementation
+#### 2️⃣ Sandbox & Deployment
 
----
+```bash
+# Kill existing sandbox and start fresh
+pkill -f "daml sandbox" || true
+sleep 3
+daml sandbox --port 6865 --json-api-port 7575
 
-**Built with ❤️ on Canton Network using Daml**
+# In another terminal, upload DARs:
+
+# Upload core DAO DAR
+daml ledger upload-dar .daml/dist/dao-maker-1.0.0.dar --host localhost --port 6865 2>&1 | tail -5
+
+# Upload test scripts DAR
+daml ledger upload-dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar --host localhost --port 6865 2>&1 | tail -5
+```
+
+#### 3️⃣ Complete Workflow Tests
+
+```bash
+# Run complete workflow (full output - 80 lines)
+daml script --dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar \
+  --script-name WorkingInteractive:testCompleteWorkflow \
+  --ledger-host localhost --ledger-port 6865 2>&1 | tail -80
+
+# Run complete workflow (filtered output - key messages only)
+daml script --dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar \
+  --script-name WorkingInteractive:testCompleteWorkflow \
+  --ledger-host localhost --ledger-port 6865 2>&1 | \
+  grep -E "(✅|Already|voted|Complete workflow|Borrow successful|Collateral|Margin)" | head -30
+```
+
+### Individual Workflow Scripts
+
+Run each workflow independently for testing specific features:
+
+#### Setup & Initialization
+
+```bash
+# 1. Setup DAO (creates admin, staking pool, treasury)
+daml script --dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar \
+  --script-name WorkingInteractive:setupDAO \
+  --ledger-host localhost --ledger-port 6865
+
+# 2. Issue tokens to members (1000 to Alice, 800 to Bob)
+daml script --dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar \
+  --script-name WorkingInteractive:issueTokens \
+  --ledger-host localhost --ledger-port 6865
+```
+
+#### Staking Workflows
+
+```bash
+# 3. Alice stakes 1000 tokens
+daml script --dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar \
+  --script-name WorkingInteractive:aliceStakes \
+  --ledger-host localhost --ledger-port 6865
+
+# 4. Bob stakes 800 tokens
+daml script --dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar \
+  --script-name WorkingInteractive:bobStakes \
+  --ledger-host localhost --ledger-port 6865
+```
+
+#### Governance Workflows
+
+```bash
+# 5. Create proposal (PROP-001: Fund Community Event)
+daml script --dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar \
+  --script-name WorkingInteractive:createProposal \
+  --ledger-host localhost --ledger-port 6865
+
+# 6. Alice votes on proposal (idempotent - checks if already voted)
+daml script --dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar \
+  --script-name WorkingInteractive:aliceVotes \
+  --ledger-host localhost --ledger-port 6865
+
+# 7. Bob votes on proposal (idempotent - checks if already voted)
+daml script --dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar \
+  --script-name WorkingInteractive:bobVotes \
+  --ledger-host localhost --ledger-port 6865
+```
+
+#### Margin Protocol Workflows
+
+```bash
+# 8. Create margin account for Alice
+daml script --dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar \
+  --script-name WorkingInteractive:createMarginAccount \
+  --ledger-host localhost --ledger-port 6865
+
+# 9. Alice deposits 500 PDAO as collateral
+daml script --dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar \
+  --script-name WorkingInteractive:aliceDepositsCollateral \
+  --ledger-host localhost --ledger-port 6865
+
+# 10. Alice borrows 200 PDAO against collateral (maintains 2.5 margin ratio)
+daml script --dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar \
+  --script-name WorkingInteractive:aliceBorrows \
+  --ledger-host localhost --ledger-port 6865
+```
+
+#### Status & Query Scripts
+
+```bash
+# 11. View complete DAO status (parties, contracts, supplies)
+daml script --dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar \
+  --script-name WorkingInteractive:viewStatus \
+  --ledger-host localhost --ledger-port 6865
+
+# 12. View margin account status (collateral, borrowed, ratio)
+daml script --dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar \
+  --script-name WorkingInteractive:viewMarginStatus \
+  --ledger-host localhost --ledger-port 6865
+```
+
+### Reset Sandbox Between Runs
+
+```bash
+# Kill sandbox and start fresh
+pkill -f "daml sandbox" || true
+sleep 3
+
+# Start new sandbox
+daml sandbox --port 6865 --json-api-port 7575 &
+sleep 8
+
+# Re-upload both DARs
+daml ledger upload-dar .daml/dist/dao-maker-1.0.0.dar --host localhost --port 6865
+daml ledger upload-dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar --host localhost --port 6865
+sleep 1
+
+# Run workflow again (idempotent - safe to repeat)
+daml script --dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar \
+  --script-name WorkingInteractive:testCompleteWorkflow \
+  --ledger-host localhost --ledger-port 6865
+```
+
+### Expected Output
+
+The complete workflow produces:
+
+```
+Starting complete DAO workflow...
+Looking for party with hint: DAO
+Found substring match: 'DAO-xxx...'
+Using parties: DAO='DAO-xxx...', Alice='Alice-yyy...', Bob='Bob-zzz...'
+✅ DAO Created!
+Admin: 006bf502dcc5d49be8ac0fd938226ba5c93db9dcba8f41fcbb5d2ce8cf8aa5916eca111220...
+Pool: 00a13cbbaf40b351eb454649daa9e4d76052bc5688dd4d3dfefbf71424b737c751ca112120...
+Treasury: 003dd7cd5fdd478ea830b5e5863ad35372f17903c471022102d8f3ecb894c619d1ca11122...
+
+--- Setup complete ---
+
+✅ Tokens Issued!
+Alice: 0027632f0436dafe007f35ff0dd59a63de3355de3cbdaae0eea428ce52017958c0ca112120...
+Bob: 0034ba1261a2c5ccfb5bde5ce35d7ee09f6e44b1f07e68b29d34c5b52c6496f1eeca112120...
+
+--- Tokens issued ---
+
+✅ Alice staked tokens!
+Stake: 001cb4866947ab5d989246e6bb4533a4f669c8afd1a90be22b0d22b7978dba6c7aca112120...
+✅ Bob staked tokens!
+Stake: 0098c7ade8fa59fb5d301ffcc1eb8a91aef994b4106786fca3dd93e70c44a4673aca112120...
+
+--- Staking complete ---
+
+✅ Proposal created!
+Proposal: 00ba20241a838ff836f38580cc4877d847f4140262ad5e568654f070bee8d6305fca11212...
+
+--- Proposal created ---
+
+✅ Alice voted!
+✅ Bob already voted, skipping...
+
+--- Voting complete ---
+
+✅ Margin account created!
+Margin Account: ...
+
+--- Margin account created ---
+
+✅ Collateral deposited!
+Updated margin account: ...
+
+--- Collateral deposited ---
+
+✅ Borrow successful!
+Borrowed margin account: ...
+
+--- Borrow complete ---
+
+=== DAO STATUS ===
+Admins: 1
+Pools: 1
+Treasuries: 1
+Proposals: 1
+Alice tokens: 0
+Bob tokens: 0
+Alice stakes: 1
+Bob stakes: 1
+
+=== MARGIN STATUS ===
+Owner: Alice
+Collateral: 500.0
+Borrowed: 200.0
+Margin Ratio: 2.5
+Maintenance Margin: 1.5
+
+✅ Complete workflow finished successfully!
+```
+
+### Troubleshooting Commands
+
+```bash
+# Check if sandbox is running
+lsof -i :6865
+
+# Check JSON API status
+curl http://localhost:7575/v1/packages
+
+# Kill all daml processes
+pkill -f daml || true
+
+# View sandbox logs
+tail -f /tmp/sandbox.log
+
+# Verify DAR files exist
+ls -lh .daml/dist/*.dar scripts/.daml/dist/*.dar
+```

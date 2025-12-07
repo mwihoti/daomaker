@@ -1,756 +1,402 @@
-# DAO Maker - Command Reference
-
-**Practical command guide for development, testing, and deployment**
-
-> **Clone the repository first:**
-> ```bash
-> git clone https://github.com/mwihoti/daomaker.git
-> cd daomaker
-> ```
-
----
+# DAO Maker - Complete Command Reference
 
 ## 📦 DAR File Locations
 
-**Two DAR files are produced during build:**
+| File | Size | Purpose | Location |
+|------|------|---------|----------|
+| **dao-maker-1.0.0.dar** | 470 KB | Core DAO templates (production) | `.daml/dist/` |
+| **dao-maker-scripts-1.0.0.dar** | 614 KB | Test scripts & workflows | `scripts/.daml/dist/` |
 
-| File | Location | Purpose |
-|------|----------|---------|
-| **Core DAR** | `.daml/dist/dao-maker-1.0.0.dar` (470 KB) | Production DAO templates |
-| **Scripts DAR** | `scripts/.daml/dist/dao-maker-scripts-1.0.0.dar` (613 KB) | Test scripts & workflows |
-
-⚠️ **Important**: Use **Scripts DAR** (`scripts/.daml/dist/dao-maker-scripts-1.0.0.dar`) for all `daml script` commands.
+⚠️ **Important**: Always use `scripts/.daml/dist/dao-maker-scripts-1.0.0.dar` (not the core DAR) when running `daml script` commands.
 
 ---
 
-## 📋 Terminal Management
+## 🔨 Build Commands
 
-> **Note:** For development workflows, keep multiple terminals running:
-> - **Terminal 1:** Sandbox (runs continuously) - `daml sandbox --port 6865 --json-api-port 7575`
-> - **Terminal 2:** Build/Test commands (interactive)
-> - **Terminal 3:** curl/JSON API testing (interactive)
->
-> Run long-lived services with `&` or in separate terminals to avoid blocking.
-
----
-
-## 🚀 Build Commands
-
-### Build Core Package
+### Build Core DAO Templates
 ```bash
 daml build
 ```
-**From:** Repository root (`daomaker/`)
 
-### Build Scripts Package
+### Build Test Scripts
 ```bash
 cd scripts
 daml build
+cd ..
 ```
-**From:** Repository root, then navigate to scripts
 
-### Clean Build (Remove artifacts first)
+### Build Both (Sequential)
 ```bash
-daml clean
-daml build
+daml build && cd scripts && daml build && cd ..
 ```
-**From:** Repository root
-
-### Build Both Packages
-```bash
-daml build && cd scripts && daml build
-```
-**From:** Repository root
 
 ---
 
-## 🧪 Test Commands
+## 🚀 Sandbox & Deployment Commands
 
-### Run Full Test Suite
+### Start Fresh Sandbox (Kill & Restart)
 ```bash
-cd scripts
-daml test
-```
-**From:** Repository root, then navigate to scripts
-
-### Run All Tests with Verbose Output
-```bash
-cd scripts
-daml test --verbose
-```
-**From:** Repository root, then navigate to scripts
-
----
-
-## 🎯 Run Individual Tests
-
-### Test Liquidation
-```bash
-daml script --dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar \
-  --script-name RiskManagement:testLiquidation
-```
-**From:** Repository root
-
-### Test Confidential Settlement
-```bash
-daml script --dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar \
-  --script-name RiskManagement:testConfidentialSettlement
-```
-**From:** Repository root
-
-### Test Position Tracking
-```bash
-daml script --dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar \
-  --script-name RiskManagement:testPositionTracking
-```
-**From:** Repository root
-
-### Test Emergency Shutdown
-```bash
-daml script --dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar \
-  --script-name RiskManagement:testEmergencyShutdown
-```
-**From:** Repository root
-
-### Test Risk Management Integration
-```bash
-daml script --dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar \
-  --script-name RiskManagement:testRiskManagementIntegration
-```
-**From:** Repository root
-
-### Test Complete Workflow
-```bash
-daml script --dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar \
-  --script-name WorkingInteractive:testCompleteWorkflow
-```
-**From:** Repository root
-
----
-
-## 🏃 Run Workflow Steps
-
-### Setup DAO
-```bash
-daml script --dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar \
-  --script-name WorkingInteractive:setupDAO
-```
-**From:** Repository root
-
-### Issue Tokens
-```bash
-daml script --dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar \
-  --script-name WorkingInteractive:issueTokens
-```
-**From:** Repository root
-
-### Alice Stakes Tokens
-```bash
-daml script --dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar \
-  --script-name WorkingInteractive:aliceStakes
-```
-**From:** Repository root
-
-### Bob Stakes Tokens
-```bash
-daml script --dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar \
-  --script-name WorkingInteractive:bobStakes
-```
-**From:** Repository root
-
-### Create Proposal
-```bash
-daml script --dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar \
-  --script-name WorkingInteractive:createProposal
-```
-**From:** Repository root
-
-### Alice Votes
-```bash
-daml script --dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar \
-  --script-name WorkingInteractive:aliceVotes
-```
-**From:** Repository root
-
-### Bob Votes
-```bash
-daml script --dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar \
-  --script-name WorkingInteractive:bobVotes
-```
-**From:** Repository root
-
-### Create Margin Account
-```bash
-daml script --dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar \
-  --script-name WorkingInteractive:createMarginAccount
-```
-**From:** Repository root
-
-### Alice Deposits Collateral
-```bash
-daml script --dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar \
-  --script-name WorkingInteractive:aliceDepositsCollateral
-```
-**From:** Repository root
-
----
-
-## 🌐 Sandbox & Ledger Commands
-
-### Start Sandbox with JSON API
-```bash
+pkill -f "daml sandbox" || true
+sleep 3
 daml sandbox --port 6865 --json-api-port 7575
 ```
-**Run in separate Terminal 1 - Keep running**  
-**From:** Repository root
 
 ### Start Sandbox in Background
 ```bash
-daml sandbox --port 6865 --json-api-port 7575 > /tmp/sandbox.log 2>&1 &
+daml sandbox --port 6865 --json-api-port 7575 &
 ```
-**Runs in background of current terminal**  
-**From:** Repository root
 
-### Start Sandbox with Full Logging
-```bash
-daml sandbox --port 6865 --json-api-port 7575 --loglevel DEBUG
-```
-**For debugging - Keep running in separate terminal**  
-**From:** Repository root
-
-### List Packages on Ledger
-```bash
-daml ledger list-packages --host localhost --port 6865
-```
-**From:** Any directory (if sandbox is running)
-
-### Upload DAR File
+### Upload Core DAO DAR
 ```bash
 daml ledger upload-dar .daml/dist/dao-maker-1.0.0.dar \
-  --host localhost \
-  --port 6865
+  --host localhost --port 6865 2>&1 | tail -5
 ```
-**From:** Repository root
 
 ### Upload Scripts DAR
 ```bash
 daml ledger upload-dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar \
-  --host localhost \
-  --port 6865
+  --host localhost --port 6865 2>&1 | tail -5
 ```
-**From:** Repository root
+
+### Upload Both DARs
+```bash
+daml ledger upload-dar .daml/dist/dao-maker-1.0.0.dar --host localhost --port 6865 && \
+daml ledger upload-dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar --host localhost --port 6865
+```
 
 ---
 
-## 🌍 JSON API Commands (curl)
+## ⚡ One-Command Full Workflow
 
-> **Note:** Requires sandbox running with JSON API port 7575
-> - Run in **Terminal 3** for interactive testing
-> - Sandbox (Terminal 1) must remain running
-
-### Get OpenAPI Specification
+### Build, Deploy & Run Complete Test
 ```bash
-curl localhost:7575/docs/openapi > openapi.yaml
+daml build && \
+cd scripts && daml build && cd .. && \
+pkill -f "daml sandbox" || true && sleep 3 && \
+daml sandbox --port 6865 --json-api-port 7575 &
+sleep 10 && \
+daml ledger upload-dar .daml/dist/dao-maker-1.0.0.dar --host localhost --port 6865 && \
+daml ledger upload-dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar --host localhost --port 6865 && \
+daml script --dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar \
+  --script-name WorkingInteractive:testCompleteWorkflow \
+  --ledger-host localhost --ledger-port 6865 2>&1 | tail -80
 ```
-**From:** Terminal 3 or any directory
-
-### Create Party (Alice)
-```bash
-curl -d '{"partyIdHint":"Alice","identityProviderId":""}' \
-  -H "Content-Type: application/json" \
-  -X POST localhost:7575/v2/parties
-```
-**From:** Terminal 3 or any directory
-
-### Create Party (Bob)
-```bash
-curl -d '{"partyIdHint":"Bob","identityProviderId":""}' \
-  -H "Content-Type: application/json" \
-  -X POST localhost:7575/v2/parties
-```
-**From:** Terminal 3 or any directory
-
-### List All Parties
-```bash
-curl localhost:7575/v2/parties
-```
-**From:** Terminal 3 or any directory
-
-### Query Active Contracts (GovernanceToken)
-```bash
-curl -d '{"templateIds":["1b2d33b9f3abb62b29ac3ac81a024fbb38c20ecf8da7c3e4d5b8c6f5d3f8c9a0:GovernanceToken.Token"]}' \
-  -H "Content-Type: application/json" \
-  -X POST localhost:7575/v2/user_query
-```
-**From:** Terminal 3 or any directory
-
-### Query Active Contracts (All)
-```bash
-curl localhost:7575/v2/user_query
-```
-**From:** Terminal 3 or any directory
-
-### Submit Command via JSON API
-```bash
-curl -d '{
-  "templateId": "1b2d33b9f3abb62b29ac3ac81a024fbb38c20ecf8da7c3e4d5b8c6f5d3f8c9a0:GovernanceToken.Token",
-  "payload": {"issuer": "Alice", "owner": "Bob", "quantity": 100}
-}' \
-  -H "Content-Type: application/json" \
-  -X POST localhost:7575/v2/create
-```
-**From:** Terminal 3 or any directory
-
-### Get Package Metadata
-```bash
-curl localhost:7575/v2/packages
-```
-**From:** Terminal 3 or any directory
-
-### Health Check
-```bash
-curl localhost:7575/health
-```
-**From:** Terminal 3 or any directory
 
 ---
 
-## 📊 Daml Script Commands
+## 🧪 Complete Workflow Tests
 
-### Run Script Against Remote Ledger
+### Run Full Workflow (Complete Output - 80 Lines)
+```bash
+daml script --dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar \
+  --script-name WorkingInteractive:testCompleteWorkflow \
+  --ledger-host localhost --ledger-port 6865 2>&1 | tail -80
+```
+
+### Run Full Workflow (Filtered Output - Key Messages Only)
+```bash
+daml script --dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar \
+  --script-name WorkingInteractive:testCompleteWorkflow \
+  --ledger-host localhost --ledger-port 6865 2>&1 | \
+  grep -E "(✅|Already|voted|Complete workflow|Borrow successful|Collateral|Margin)" | head -30
+```
+
+---
+
+## 📋 Individual Workflow Scripts
+
+### Setup Phase
+
+#### Create DAO (Admin, Staking Pool, Treasury)
 ```bash
 daml script --dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar \
   --script-name WorkingInteractive:setupDAO \
-  --ledger-host remote.host.com \
-  --ledger-port 6865
+  --ledger-host localhost --ledger-port 6865
 ```
-**From:** Repository root
 
-### Run Script with Ledger API Options
+#### Issue Tokens (Alice: 1000, Bob: 800)
 ```bash
 daml script --dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar \
-  --script-name RiskManagement:testLiquidation \
-  --ledger-host localhost \
-  --ledger-port 6865 \
-  --wall-clock-time
+  --script-name WorkingInteractive:issueTokens \
+  --ledger-host localhost --ledger-port 6865
 ```
-**From:** Repository root
 
-### View Script Execution with Trace
+### Staking Phase
+
+#### Alice Stakes Tokens (500)
 ```bash
 daml script --dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar \
-  --script-name WorkingInteractive:setupDAO \
-  --ledger-host localhost \
-  --ledger-port 6865 2>&1 | tee script-output.log
+  --script-name WorkingInteractive:aliceStakes \
+  --ledger-host localhost --ledger-port 6865
 ```
-**From:** Repository root
+
+#### Bob Stakes Tokens (400)
+```bash
+daml script --dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar \
+  --script-name WorkingInteractive:bobStakes \
+  --ledger-host localhost --ledger-port 6865
+```
+
+### Governance Phase
+
+#### Create Proposal (PROP-001: Fund Community Event)
+```bash
+daml script --dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar \
+  --script-name WorkingInteractive:createProposal \
+  --ledger-host localhost --ledger-port 6865
+```
+
+#### Alice Votes FOR (Idempotent - Checks if Already Voted)
+```bash
+daml script --dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar \
+  --script-name WorkingInteractive:aliceVotes \
+  --ledger-host localhost --ledger-port 6865
+```
+
+#### Bob Votes FOR (Idempotent - Checks if Already Voted)
+```bash
+daml script --dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar \
+  --script-name WorkingInteractive:bobVotes \
+  --ledger-host localhost --ledger-port 6865
+```
+
+### Margin Protocol Phase
+
+#### Create Margin Account for Alice
+```bash
+daml script --dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar \
+  --script-name WorkingInteractive:createMarginAccount \
+  --ledger-host localhost --ledger-port 6865
+```
+
+#### Alice Deposits 500 PDAO as Collateral
+```bash
+daml script --dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar \
+  --script-name WorkingInteractive:aliceDepositsCollateral \
+  --ledger-host localhost --ledger-port 6865
+```
+
+#### Alice Borrows 200 PDAO (Maintains 2.5 Margin Ratio)
+```bash
+daml script --dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar \
+  --script-name WorkingInteractive:aliceBorrows \
+  --ledger-host localhost --ledger-port 6865
+```
+
+### Status & Query Scripts
+
+#### View Complete DAO Status
+```bash
+daml script --dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar \
+  --script-name WorkingInteractive:viewStatus \
+  --ledger-host localhost --ledger-port 6865
+```
+
+#### View Margin Account Status (Collateral, Borrowed, Ratio)
+```bash
+daml script --dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar \
+  --script-name WorkingInteractive:viewMarginStatus \
+  --ledger-host localhost --ledger-port 6865
+```
 
 ---
 
-## 🔍 Inspection & Debugging
+## 🔄 Test Suite Commands
 
-### Check Sandbox Port Status
+### Run All Tests
 ```bash
-netstat -tuln | grep 6865
+daml test
 ```
-**From:** Any directory
 
-### Check JSON API Port
+### Run Tests with Pattern Match
 ```bash
-netstat -tuln | grep 7575
+daml test --test-pattern testCompleteWorkflow
+daml test --test-pattern testDepositTransaction
+daml test --test-pattern runSimpleTests
 ```
-**From:** Any directory
+
+### Run Tests Verbose
+```bash
+daml test --verbose
+```
+
+---
+
+## 🔧 Maintenance & Debugging Commands
+
+### Check Sandbox Status
+```bash
+# Is sandbox running on port 6865?
+lsof -i :6865
+```
+
+### Check JSON API Status
+```bash
+# Verify JSON API is responding
+curl http://localhost:7575/v1/packages
+```
 
 ### View Sandbox Logs
 ```bash
-tail -50 /tmp/sandbox.log
-```
-**From:** Any directory
-
-### Follow Sandbox Logs Live
-```bash
 tail -f /tmp/sandbox.log
 ```
-**Keep running in Terminal 4 for live debugging**
 
-### Check Process Status
+### List Uploaded DARs
 ```bash
-ps aux | grep -E "daml|canton" | grep -v grep
+daml ledger list-dar --host localhost --port 6865
 ```
-**From:** Any directory
 
 ### Verify DAR Files Exist
 ```bash
-ls -lh .daml/dist/*.dar
-ls -lh scripts/.daml/dist/*.dar
-```
-**From:** Repository root
-
-### Check File Sizes
-```bash
-du -h .daml/dist/
-du -h scripts/.daml/dist/
-```
-**From:** Repository root
-
----
-
-## 🛑 Stop & Cleanup
-
-### Stop Sandbox (Kill Process)
-```bash
-pkill -f "daml sandbox"
-```
-**Stops Terminal 1 sandbox process**
-
-### Force Kill All Daml/Canton Processes
-```bash
-pkill -9 -f "canton|daml"
-```
-**Emergency cleanup - kills all Daml processes**
-
-### Clean Build Artifacts
-```bash
-daml clean
-```
-**From:** Repository root
-
-### Clean All (Core + Scripts)
-```bash
-daml clean
-cd scripts && daml clean
-```
-**From:** Repository root
-
-### Remove DAR Files
-```bash
-rm -f .daml/dist/*.dar
-rm -f scripts/.daml/dist/*.dar
-```
-**From:** Repository root
-
----
-
-## ⚡ One-Line Quick Commands
-
-### Build & Test Core Only
-```bash
-daml clean && daml build && cd scripts && daml test
-```
-**From:** Repository root
-
-### Build Both & Run Liquidation Test
-```bash
-daml build && cd scripts && daml build && daml script --dar .daml/dist/dao-maker-scripts-1.0.0.dar --script-name RiskManagement:testLiquidation
-```
-**From:** Repository root
-
-### Fresh Sandbox with DAO Setup
-```bash
-pkill -f "daml sandbox" || true && sleep 1 && daml sandbox --port 6865 --json-api-port 7575 > /tmp/sandbox.log 2>&1 & sleep 5 && daml ledger upload-dar .daml/dist/dao-maker-1.0.0.dar --host localhost --port 6865 && daml ledger upload-dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar --host localhost --port 6865
-```
-**From:** Repository root (starts sandbox in background in Terminal 1)
-
-### Quick Test All Features
-```bash
-cd scripts && daml test 2>&1 | grep -E "ok,|failed"
-```
-**From:** Repository root
-
-### Setup & Run Workflow
-```bash
-daml script --dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar --script-name WorkingInteractive:setupDAO && daml script --dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar --script-name WorkingInteractive:testCompleteWorkflow
-```
-**From:** Repository root
-
----
-
-## 📋 Common Workflows
-
-### Full Development Cycle
-**Terminal 1:** (Keep running)
-```bash
-daml sandbox --port 6865 --json-api-port 7575
+ls -lh .daml/dist/*.dar scripts/.daml/dist/*.dar
 ```
 
-**Terminal 2:**
+### Kill All DAML Processes
 ```bash
-# 1. Build
-daml build
-
-# 2. Build scripts
-cd scripts
-daml build
-
-# 3. Run tests
-daml test
+pkill -f daml || true
 ```
-**From:** Repository root
 
----
-
-### Deploy to Fresh Sandbox
-
-**Terminal 1:** (Keep running)
+### Kill Only Sandbox
 ```bash
-# 1. Kill existing sandbox
 pkill -f "daml sandbox" || true
-
-# 2. Start new sandbox
-daml sandbox --port 6865 --json-api-port 7575 > /tmp/sandbox.log 2>&1 &
 ```
 
-**Terminal 2:**
-```bash
-# Wait for sandbox to start
-sleep 5
+---
 
-# 3. Upload DARs
+## 🔁 Reset & Re-run Workflow
+
+### Complete Reset (Fresh Sandbox)
+```bash
+# Kill existing sandbox
+pkill -f "daml sandbox" || true
+sleep 3
+
+# Start new sandbox
+daml sandbox --port 6865 --json-api-port 7575 &
+sleep 8
+
+# Re-upload both DARs
+daml ledger upload-dar .daml/dist/dao-maker-1.0.0.dar --host localhost --port 6865
+daml ledger upload-dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar --host localhost --port 6865
+sleep 1
+
+# Run workflow again (idempotent - safe to repeat)
+daml script --dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar \
+  --script-name WorkingInteractive:testCompleteWorkflow \
+  --ledger-host localhost --ledger-port 6865 2>&1 | tail -80
+```
+
+---
+
+## 📊 Expected Output Example
+
+```
+Starting complete DAO workflow...
+✅ DAO Created!
+Admin: 006bf502dcc5d49be8ac0fd938226ba5c93db9dcba8f41fcbb5d2ce8cf8aa5916eca111220...
+
+--- Setup complete ---
+
+✅ Tokens Issued!
+Alice: 0027632f0436dafe007f35ff0dd59a63de3355de3cbdaae0eea428ce52017958c0ca112120...
+Bob: 0034ba1261a2c5ccfb5bde5ce35d7ee09f6e44b1f07e68b29d34c5b52c6496f1eeca112120...
+
+--- Tokens issued ---
+
+✅ Alice staked tokens!
+✅ Bob staked tokens!
+
+--- Staking complete ---
+
+✅ Proposal created!
+
+--- Proposal created ---
+
+✅ Alice voted!
+✅ Bob already voted, skipping...
+
+--- Voting complete ---
+
+✅ Margin account created!
+✅ Collateral deposited!
+✅ Borrow successful!
+
+=== DAO STATUS ===
+Admins: 1, Pools: 1, Treasuries: 1
+Proposals: 1, Alice stakes: 1, Bob stakes: 1
+
+=== MARGIN STATUS ===
+Owner: Alice
+Collateral: 500.0
+Borrowed: 200.0
+Margin Ratio: 2.5
+
+✅ Complete workflow finished successfully!
+```
+
+---
+
+## 💡 Command Tips
+
+| Tip | Command |
+|-----|---------|
+| **Quick test after changes** | `daml build && daml test` |
+| **Test one function** | `daml test --test-pattern functionName` |
+| **See real-time output** | Remove `2>&1 \| tail -XX` from script commands |
+| **Filter for errors** | `grep -E "(error\|Error\|ERROR\|failed\|Failed)"` |
+| **Count passing tests** | `daml test 2>&1 \| grep "passing"` |
+| **Save output to file** | `daml script ... > output.log 2>&1` |
+| **Re-run last sandbox** | `daml sandbox --port 6865 --json-api-port 7575` |
+| **Check port availability** | `netstat -tuln \| grep 6865` |
+
+---
+
+## 🎯 Common Workflows
+
+### Workflow 1: Quick Verification (5 minutes)
+```bash
+# One-liner: Build, deploy, and verify everything works
+daml build && cd scripts && daml build && cd .. && \
+pkill -f "daml sandbox" || true && sleep 3 && \
+daml sandbox --port 6865 --json-api-port 7575 & sleep 10 && \
+daml ledger upload-dar .daml/dist/dao-maker-1.0.0.dar --host localhost --port 6865 && \
+daml ledger upload-dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar --host localhost --port 6865 && \
+daml script --dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar \
+  --script-name WorkingInteractive:testCompleteWorkflow \
+  --ledger-host localhost --ledger-port 6865 2>&1 | grep "✅"
+```
+
+### Workflow 2: Development & Testing (15 minutes)
+```bash
+# Build, run all tests, then run complete workflow
+daml build && daml test && \
+pkill -f "daml sandbox" || true && sleep 3 && \
+daml sandbox --port 6865 --json-api-port 7575 & sleep 8 && \
+daml ledger upload-dar .daml/dist/dao-maker-1.0.0.dar --host localhost --port 6865 && \
+daml ledger upload-dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar --host localhost --port 6865 && \
+daml script --dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar \
+  --script-name WorkingInteractive:testCompleteWorkflow \
+  --ledger-host localhost --ledger-port 6865 2>&1 | tail -80
+```
+
+### Workflow 3: Interactive Testing (30 minutes)
+```bash
+# Start sandbox once, then run individual scripts as needed
+pkill -f "daml sandbox" || true && sleep 3
+daml sandbox --port 6865 --json-api-port 7575 &
+sleep 8
+
+# Upload DARs
 daml ledger upload-dar .daml/dist/dao-maker-1.0.0.dar --host localhost --port 6865
 daml ledger upload-dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar --host localhost --port 6865
 
-# 4. Initialize DAO
+# Now run individual scripts:
 daml script --dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar \
-  --script-name WorkingInteractive:setupDAO \
-  --ledger-host localhost \
-  --ledger-port 6865
-```
-**From:** Repository root
+  --script-name WorkingInteractive:setupDAO --ledger-host localhost --ledger-port 6865
 
----
-
-### Test Individual Features in Sequence
-
-**Terminal 1:** (Keep running)
-```bash
-daml sandbox --port 6865 --json-api-port 7575
-```
-
-**Terminal 2:**
-```bash
-# Liquidation
-daml script --dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar --script-name RiskManagement:testLiquidation
-
-# Confidential Settlement
-daml script --dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar --script-name RiskManagement:testConfidentialSettlement
-
-# Position Tracking
-daml script --dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar --script-name RiskManagement:testPositionTracking
-
-# Emergency Shutdown
-daml script --dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar --script-name RiskManagement:testEmergencyShutdown
-
-# Full Integration
-daml script --dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar --script-name RiskManagement:testRiskManagementIntegration
-```
-**From:** Repository root
-
----
-
-### JSON API Testing
-
-**Terminal 1:** (Keep running)
-```bash
-daml sandbox --port 6865 --json-api-port 7575
-```
-
-**Terminal 3:** (For curl commands)
-```bash
-# Create parties
-curl -d '{"partyIdHint":"TestParty","identityProviderId":""}' \
-  -H "Content-Type: application/json" \
-  -X POST localhost:7575/v2/parties
-
-# List parties
-curl localhost:7575/v2/parties
-
-# Get API spec
-curl localhost:7575/docs/openapi > api-spec.yaml
-
-# Check health
-curl localhost:7575/health
-```
-**From:** Any directory
-
----
-
-## 🔗 Configuration
-
-### Sandbox Default Settings
-- **Port:** 6865
-- **JSON API Port:** 7575
-- **Host:** localhost
-- **Protocol:** gRPC
-
-### Example Remote Ledger
-- **Host:** canton.example.com
-- **Port:** 6865
-- **Protocol:** gRPC
-
-### Modify Sandbox Port
-```bash
-daml sandbox --port 7000 --json-api-port 7575
-```
-
-### Modify JSON API Port
-```bash
-daml sandbox --port 6865 --json-api-port 8080
-```
-
----
-
-## 📁 Project Structure
-
-```
-daomaker/                          # Git repository root
-├── daml/                           # Core Daml packages
-│   ├── GovernanceToken.daml
-│   ├── Staking.daml
-│   ├── Governance.daml
-│   ├── DAOSetup.daml
-│   ├── Margin.daml                # Contains risk management features
-│   └── ...
-├── scripts/                        # Test scripts
-│   ├── daml/
-│   │   ├── Test.daml
-│   │   ├── SimpleTest.daml
-│   │   ├── WorkingInteractive.daml
-│   │   ├── RiskManagement.daml    # New risk management tests
-│   │   └── ...
-│   └── daml.yaml
-├── .daml/
-│   └── dist/
-│       └── dao-maker-1.0.0.dar     # Core package artifact
-├── daml.yaml                       # Core configuration
-├── COMMANDS.md                     # This file
-└── deploy.sh, deploy-init-dao.sh   # Deployment scripts
-```
-
----
-
-## 📝 Environment Variables (Optional)
-
-```bash
-# Set custom ledger host
-export DAML_LEDGER_HOST=localhost
-
-# Set custom ledger port
-export DAML_LEDGER_PORT=6865
-
-# Set custom JSON API port
-export DAML_JSON_API_PORT=7575
-```
-
----
-
-## 🚨 Troubleshooting
-
-### Port Already in Use
-```bash
-# Check what's using port 6865
-lsof -i :6865
-
-# Find and kill process
-pkill -f "daml sandbox"
-```
-
-### Sandbox Won't Start
-```bash
-# Check logs
-tail -50 /tmp/sandbox.log
-
-# Kill any lingering processes
-pkill -9 -f "canton"
-```
-
-### Build Failures
-```bash
-# Clean and rebuild
-daml clean
-daml build
-
-# Check for errors
-daml build 2>&1 | grep -i error
-```
-**From:** Repository root
-
-### Test Failures
-```bash
-# Run tests with verbose output
-cd scripts
-daml test --verbose
-
-# Check recent test output
-daml test 2>&1 | tail -100
-```
-
-### DAR Upload Failed
-```bash
-# Verify DAR exists
-ls -lh .daml/dist/*.dar
-
-# Check sandbox is running
-netstat -tuln | grep 6865
-
-# Try upload with verbose
-daml ledger upload-dar .daml/dist/dao-maker-1.0.0.dar \
-  --host localhost \
-  --port 6865 \
-  --verbose
-```
-
-### JSON API Not Responding
-```bash
-# Check port
-netstat -tuln | grep 7575
-
-# Restart sandbox with JSON API
-pkill -f "daml sandbox"
-daml sandbox --port 6865 --json-api-port 7575
-```
-
----
-
-## ✅ Verification Checklist
-
-**Terminal 1:** (Keep running)
-```bash
-daml sandbox --port 6865 &
-sleep 3
-```
-
-**Terminal 2:**
-```bash
-# 1. Verify build succeeds
-daml build
-
-# 2. Verify tests pass
-cd scripts && daml test
-
-# 3. Verify sandbox starts
-curl localhost:7575/health
-
-# 4. Verify DARs can be uploaded
-daml ledger upload-dar .daml/dist/dao-maker-1.0.0.dar \
-  --host localhost --port 6865
-
-# 5. Verify script runs
 daml script --dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar \
-  --script-name WorkingInteractive:setupDAO
+  --script-name WorkingInteractive:issueTokens --ledger-host localhost --ledger-port 6865
+
+# ... repeat as needed
 ```
-**From:** Repository root
 
----
-
-## 📚 Additional Resources
-
-- **Daml Docs:** https://docs.daml.com
-- **JSON API:** https://docs.daml.com/json-api
-- **Ledger API:** https://docs.daml.com/app-dev/ledger-api.html
-- **Daml Script:** https://docs.daml.com/daml-script
-
----
-
-**Last Updated:** December 7, 2025  
-**Version:** 2.0.0  
-**Format:** Practical command reference for developers
