@@ -236,7 +236,7 @@ template Treasury
         assertMsg "Token owner must be depositor" (token.owner == depositor)
         assertMsg "Token symbol must match" (token.symbol == tokenSymbol)
         
-        exercise tokenCid Archive
+        exercise tokenCid Spend
         create this with balance = balance + token.amount
 
     -- Transfer from treasury (called by executed proposal)
