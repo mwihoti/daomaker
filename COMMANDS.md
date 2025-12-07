@@ -10,6 +10,19 @@
 
 ---
 
+## 📦 DAR File Locations
+
+**Two DAR files are produced during build:**
+
+| File | Location | Purpose |
+|------|----------|---------|
+| **Core DAR** | `.daml/dist/dao-maker-1.0.0.dar` (470 KB) | Production DAO templates |
+| **Scripts DAR** | `scripts/.daml/dist/dao-maker-scripts-1.0.0.dar` (613 KB) | Test scripts & workflows |
+
+⚠️ **Important**: Use **Scripts DAR** (`scripts/.daml/dist/dao-maker-scripts-1.0.0.dar`) for all `daml script` commands.
+
+---
+
 ## 📋 Terminal Management
 
 > **Note:** For development workflows, keep multiple terminals running:

@@ -178,9 +178,9 @@ daml sandbox
 daml ledger upload-dar .daml/dist/dao-maker-1.0.0.dar \
   --host localhost --port 6865
 
-# Initialize DAO on ledger
+# Initialize DAO on ledger (use SCRIPTS DAR)
 daml script \
-  --dar .daml/dist/dao-maker-1.0.0.dar \
+  --dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar \
   --script-name SimpleTest:testFullDAOInit \
   --ledger-host localhost \
   --ledger-port 6865

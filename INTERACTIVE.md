@@ -5,8 +5,11 @@ Your DAO is deployed! Here's how to interact with it step-by-step.
 ## 📋 Current Status
 
 - ✅ Canton Sandbox: Running on port 6865
-- ✅ DAR Deployed: dao-maker-1.0.0.dar
+- ✅ Core DAR Deployed: .daml/dist/dao-maker-1.0.0.dar
+- ✅ Scripts DAR Deployed: scripts/.daml/dist/dao-maker-scripts-1.0.0.dar
 - ✅ Parties Allocated: DAO, Alice, Bob
+
+⚠️ **Important**: Use the **Scripts DAR** (not Core DAR) for all `daml script` commands below
 
 ## 🚀 Step-by-Step Usage
 
@@ -14,7 +17,7 @@ Your DAO is deployed! Here's how to interact with it step-by-step.
 
 ```bash
 daml script \
-  --dar .daml/dist/dao-maker-1.0.0.dar \
+  --dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar \
   --script-name Interactive:setupDAO \
   --ledger-host localhost \
   --ledger-port 6865
@@ -29,7 +32,7 @@ This creates:
 
 ```bash
 daml script \
-  --dar .daml/dist/dao-maker-1.0.0.dar \
+  --dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar \
   --script-name Interactive:issueTokens \
   --ledger-host localhost \
   --ledger-port 6865
@@ -43,7 +46,7 @@ Issues:
 
 ```bash
 daml script \
-  --dar .daml/dist/dao-maker-1.0.0.dar \
+  --dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar \
   --script-name Interactive:aliceStakes \
   --ledger-host localhost \
   --ledger-port 6865
@@ -55,7 +58,7 @@ Alice stakes her tokens for voting power.
 
 ```bash
 daml script \
-  --dar .daml/dist/dao-maker-1.0.0.dar \
+  --dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar \
   --script-name Interactive:createProposal \
   --ledger-host localhost \
   --ledger-port 6865
@@ -68,14 +71,14 @@ Creates a proposal to fund community event.
 ```bash
 # Alice votes
 daml script \
-  --dar .daml/dist/dao-maker-1.0.0.dar \
+  --dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar \
   --script-name Interactive:aliceVotes \
   --ledger-host localhost \
   --ledger-port 6865
 
 # Bob votes (after Bob stakes his tokens)
 daml script \
-  --dar .daml/dist/dao-maker-1.0.0.dar \
+  --dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar \
   --script-name Interactive:bobVotes \
   --ledger-host localhost \
   --ledger-port 6865
@@ -85,7 +88,7 @@ daml script \
 
 ```bash
 daml script \
-  --dar .daml/dist/dao-maker-1.0.0.dar \
+  --dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar \
   --script-name Interactive:viewStatus \
   --ledger-host localhost \
   --ledger-port 6865
@@ -126,31 +129,33 @@ Run these in order:
 cd /home/daniel/work/daml/dao
 
 # 1. Setup
-daml script --dar .daml/dist/dao-maker-1.0.0.dar --script-name Interactive:setupDAO --ledger-host localhost --ledger-port 6865
+daml script --dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar --script-name Interactive:setupDAO --ledger-host localhost --ledger-port 6865
 
 # 2. Issue tokens
-daml script --dar .daml/dist/dao-maker-1.0.0.dar --script-name Interactive:issueTokens --ledger-host localhost --ledger-port 6865
+daml script --dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar --script-name Interactive:issueTokens --ledger-host localhost --ledger-port 6865
 
 # 3. Stake
-daml script --dar .daml/dist/dao-maker-1.0.0.dar --script-name Interactive:aliceStakes --ledger-host localhost --ledger-port 6865
+daml script --dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar --script-name Interactive:aliceStakes --ledger-host localhost --ledger-port 6865
 
 # 4. Create proposal
-daml script --dar .daml/dist/dao-maker-1.0.0.dar --script-name Interactive:createProposal --ledger-host localhost --ledger-port 6865
+daml script --dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar --script-name Interactive:createProposal --ledger-host localhost --ledger-port 6865
 
 # 5. Vote
-daml script --dar .daml/dist/dao-maker-1.0.0.dar --script-name Interactive:aliceVotes --ledger-host localhost --ledger-port 6865
+daml script --dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar --script-name Interactive:aliceVotes --ledger-host localhost --ledger-port 6865
 
 # 6. Check status
-daml script --dar .daml/dist/dao-maker-1.0.0.dar --script-name Interactive:viewStatus --ledger-host localhost --ledger-port 6865
+daml script --dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar --script-name Interactive:viewStatus --ledger-host localhost --ledger-port 6865
 ```
 
 ## 🛠️ Troubleshooting
 
-If scripts fail, rebuild and redeploy:
+If scripts fail, rebuild and redeploy both packages:
 
 ```bash
 daml build
+cd scripts && daml build
 daml ledger upload-dar .daml/dist/dao-maker-1.0.0.dar --host localhost --port 6865
+daml ledger upload-dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar --host localhost --port 6865
 ```
 
 ## 📚 Next Steps

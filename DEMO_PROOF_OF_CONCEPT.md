@@ -4,8 +4,6 @@
 
 **GitHub Repository**: https://github.com/mwihoti/daomaker  
 **Branch**: main  
-**Status**: ✅ Production-Ready  
-**Last Updated**: December 2025
 
 ---
 

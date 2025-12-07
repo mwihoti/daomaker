@@ -61,15 +61,32 @@ A fully on-chain Decentralized Autonomous Organization (DAO) implementation buil
 ```
 dao/
 ├── daml.yaml                    # Project configuration
-└── daml/
-    ├── GovernanceToken.daml     # Token and admin templates
-    ├── Staking.daml             # Staking system
-    ├── Governance.daml          # Proposals, voting, treasury
-    ├── DAOSetup.daml            # DAO initialization
-    ├── Margin.daml              # Margin protocol and risk management
-    ├── SimpleTest.daml          # Comprehensive test scenarios
-    └── WorkingInteractive.daml  # Interactive ledger operations
+├── daml/                        # Core templates
+│   ├── GovernanceToken.daml     # Token and admin templates
+│   ├── Staking.daml             # Staking system
+│   ├── Governance.daml          # Proposals, voting, treasury
+│   ├── DAOSetup.daml            # DAO initialization
+│   └── Margin.daml              # Margin protocol and risk management
+└── scripts/
+    ├── daml.yaml                # Scripts package configuration
+    └── daml/
+        ├── Test.daml            # Core DAO tests
+        ├── SimpleTest.daml      # Margin protocol tests
+        ├── WorkingInteractive.daml  # Full workflow tests
+        ├── RiskManagement.daml  # Risk management tests
+        └── Deploy.daml          # Deployment helpers
 ```
+
+## 📦 Build Output
+
+The build process creates **two DAR files**:
+
+| File | Size | Location | Usage |
+|------|------|----------|-------|
+| **Core DAR** | 470 KB | `.daml/dist/dao-maker-1.0.0.dar` | Production DAO templates |
+| **Scripts DAR** | 613 KB | `scripts/.daml/dist/dao-maker-scripts-1.0.0.dar` | Test scripts & interactive workflows |
+
+⚠️ **Important for script execution**: Always use `scripts/.daml/dist/dao-maker-scripts-1.0.0.dar` (not the core DAR) when running `daml script` commands.
 
 ## 🏗️ Architecture
 

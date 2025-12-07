@@ -1,10 +1,5 @@
 # 🚀 DAO Maker - Deployment Complete
 
-**Date**: December 7, 2025  
-**Status**: ✅ **LIVE IN SANDBOX**  
-**Environment**: Local Daml Sandbox  
-**Ledger**: localhost:6865  
-
 ---
 
 ## ✅ Deployment Status

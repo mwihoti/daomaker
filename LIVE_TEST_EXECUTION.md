@@ -2,7 +2,7 @@
 
 ## 🎬 Real Test Output - testCompleteWorkflow
 
-This is what judges will see when running the proof-of-concept:
+This is what you  will see when running the proof-of-concept:
 
 ```bash
 $ cd /home/daniel/work/daml/dao/scripts
