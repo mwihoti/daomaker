@@ -1,0 +1,76 @@
+[4;1m
+Test Summary[m
+
+daml/Deploy.daml:demoProposal: ok, 1 active contracts, 2 transactions.
+daml/Deploy.daml:demoStaking: ok, 2 active contracts, 4 transactions.
+daml/Deploy.daml:deployDAO: ok, 5 active contracts, 4 transactions.
+daml/DepositTest.daml:testDepositTransaction: ok, 4 active contracts, 5 transactions.
+daml/InspectDAO.daml:inspectDAO: ok, 0 active contracts, 0 transactions.
+daml/RiskManagement.daml:testPositionTracking: ok, 0 active contracts, 0 transactions.
+daml/RiskManagement.daml:testEmergencyShutdown: ok, 1 active contracts, 4 transactions.
+daml/RiskManagement.daml:testConfidentialSettlement: ok, 1 active contracts, 2 transactions.
+daml/RiskManagement.daml:testLiquidation: failed
+daml/RiskManagement.daml:testRiskManagementIntegration: failed
+daml/SimpleTest.daml:testTreasuryOps: ok, 2 active contracts, 2 transactions.
+daml/SimpleTest.daml:testMarginProtocol: ok, 3 active contracts, 6 transactions.
+daml/SimpleTest.daml:testTokenOps: ok, 2 active contracts, 4 transactions.
+daml/SimpleTest.daml:testFullDAOInit: ok, 5 active contracts, 4 transactions.
+daml/SimpleTest.daml:testInitializeDAO: ok, 3 active contracts, 3 transactions.
+daml/SimpleTest.daml:testCreateProposal: ok, 2 active contracts, 3 transactions.
+daml/SimpleTest.daml:testVotingWorkflow: ok, 5 active contracts, 12 transactions.
+daml/SimpleTest.daml:testSimpleStaking: ok, 2 active contracts, 4 transactions.
+daml/SimpleTest.daml:testIncreaseStake: ok, 2 active contracts, 6 transactions.
+daml/SimpleTest.daml:runSimpleTests: ok, 26 active contracts, 44 transactions.
+daml/Test.daml:testMemberInvitation: ok, 2 active contracts, 3 transactions.
+daml/Test.daml:testTokenOperations: ok, 2 active contracts, 5 transactions.
+daml/Test.daml:testTreasuryOperations: ok, 1 active contracts, 4 transactions.
+daml/Test.daml:testProposalRejection: ok, 4 active contracts, 11 transactions.
+daml/Test.daml:testStakingOperations: ok, 2 active contracts, 7 transactions.
+daml/Test.daml:testCompleteDAOLifecycle: ok, 8 active contracts, 16 transactions.
+daml/Test.daml:runAllTests: failed
+daml/WorkingInteractive.daml:setupDAO: ok, 3 active contracts, 2 transactions.
+daml/WorkingInteractive.daml:issueTokens: ok, 5 active contracts, 4 transactions.
+daml/WorkingInteractive.daml:aliceStakes: ok, 5 active contracts, 5 transactions.
+daml/WorkingInteractive.daml:bobStakes: ok, 5 active contracts, 5 transactions.
+daml/WorkingInteractive.daml:createProposal: ok, 1 active contracts, 2 transactions.
+daml/WorkingInteractive.daml:aliceVotes: ok, 6 active contracts, 8 transactions.
+daml/WorkingInteractive.daml:bobVotes: ok, 6 active contracts, 8 transactions.
+daml/WorkingInteractive.daml:viewStatus: ok, 0 active contracts, 0 transactions.
+daml/WorkingInteractive.daml:createMarginAccount: ok, 1 active contracts, 1 transactions.
+daml/WorkingInteractive.daml:aliceBorrows: failed
+daml/WorkingInteractive.daml:aliceDepositsCollateral: ok, 4 active contracts, 5 transactions.
+daml/WorkingInteractive.daml:viewMarginStatus: ok, 0 active contracts, 0 transactions.
+daml/WorkingInteractive.daml:testCompleteWorkflow: ok, 8 active contracts, 14 transactions.
+Modules internal to this package:
+- Internal templates
+  0 defined
+  0 (100.0%) created
+- Internal template choices
+  0 defined
+  0 (100.0%) exercised
+- Internal interface implementations
+  0 defined
+    0 internal interfaces
+    0 external interfaces
+- Internal interface choices
+  0 defined
+  0 (100.0%) exercised
+Modules external to this package:
+- External templates
+  16 defined
+  12 ( 75.0%) created in any tests
+  12 ( 75.0%) created in internal tests
+  0 (  0.0%) created in external tests
+- External template choices
+  60 defined
+  28 ( 46.7%) exercised in any tests
+  28 ( 46.7%) exercised in internal tests
+  0 (  0.0%) exercised in external tests
+- External interface implementations
+  0 defined
+- External interface choices
+  0 defined
+  0 (100.0%) exercised in any tests
+  0 (100.0%) exercised in internal tests
+  0 (100.0%) exercised in external tests
+

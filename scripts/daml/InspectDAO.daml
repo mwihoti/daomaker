@@ -1,0 +1,106 @@
+-- Script to inspect DAO contract details
+module InspectDAO where
+
+import Daml.Script
+import GovernanceToken
+import Staking
+import Governance
+import DAOSetup
+import DA.List (head)
+import DA.Text qualified as T
+
+-- Get existing party by hint - doesn't allocate if not found
+getExistingParty : Text -> Script Party
+getExistingParty hint = do
+  allParties <- listKnownParties
+  debug $ "Looking for party with hint: " <> hint
+  debug $ "All known parties: " <> show (map (\p -> show p.party) allParties)
+  
+  -- First try: exact match on party ID string representation
+  let exactMatches = filter (\p -> show p.party == hint) allParties
+  case exactMatches of
+    (p :: _) -> do
+      debug $ "Found exact match: " <> show p.party
+      return p.party
+    [] -> do
+      -- Second try: substring match on party ID
+      let substringMatches = filter (\p -> T.isInfixOf hint (show p.party)) allParties
+      case substringMatches of
+        (p :: _) -> do
+          debug $ "Found substring match: " <> show p.party
+          return p.party
+        [] -> do
+          debug $ "No party found for hint: " <> hint <> ", allocating by hint"
+          allocatePartyByHint (PartyIdHint hint)
+
+inspectDAO : Script ()
+inspectDAO = script do
+  dao <- getExistingParty "DAO"
+  alice <- getExistingParty "Alice"
+  bob <- getExistingParty "Bob"
+
+  -- Query DAO Admin
+  adminContracts <- query @DAOAdmin dao
+  case adminContracts of
+    [] -> debug "No DAO Admin found"
+    (adminCid, admin) :: _ -> do
+      debug "=== DAO ADMIN ==="
+      debug $ "Admin Party: " <> show admin.admin
+      debug $ "DAO Name: " <> admin.daoName
+      debug $ "Token Symbol: " <> admin.tokenSymbol
+      debug $ "Members: " <> show admin.members
+
+  -- Query Staking Pool
+  poolContracts <- query @StakingPool dao
+  case poolContracts of
+    [] -> debug "No Staking Pool found"
+    (poolCid, pool) :: _ -> do
+      debug "=== STAKING POOL ==="
+      debug $ "DAO: " <> show pool.dao
+      debug $ "Token Symbol: " <> pool.tokenSymbol
+      debug $ "Total Staked: " <> show pool.totalStaked
+      debug $ "Stakers: " <> show pool.stakers
+
+  -- Query Treasury
+  treasuryContracts <- query @Treasury dao
+  case treasuryContracts of
+    [] -> debug "No Treasury found"
+    (treasuryCid, treasury) :: _ -> do
+      debug "=== TREASURY ==="
+      debug $ "DAO: " <> show treasury.dao
+      debug $ "Balance: " <> show treasury.balance
+      debug $ "Token Symbol: " <> treasury.tokenSymbol
+      debug $ "Beneficiaries: " <> show treasury.beneficiaries
+
+  -- Query Proposals
+  proposalContracts <- query @Proposal dao
+  case proposalContracts of
+    [] -> debug "No Proposals found"
+    (proposalCid, proposal) :: _ -> do
+      debug "=== PROPOSAL ==="
+      debug $ "DAO: " <> show proposal.dao
+      debug $ "Proposer: " <> show proposal.proposer
+      debug $ "Proposal ID: " <> proposal.proposalId
+      debug $ "Title: " <> proposal.title
+      debug $ "Description: " <> proposal.description
+      debug $ "Payload: " <> proposal.payload
+      debug $ "Action: " <> show proposal.action
+      debug $ "Quorum Required: " <> show proposal.quorumRequired
+      debug $ "End Time: " <> show proposal.endTime
+      debug $ "Created At: " <> show proposal.createdAt
+      debug $ "Votes Count: " <> show (length proposal.votes)
+      debug $ "Status: " <> show proposal.status
+
+  -- Query Staked Positions
+  aliceStakes <- query @StakedPosition alice
+  bobStakes <- query @StakedPosition bob
+
+  debug "=== ALICE'S STAKES ==="
+  case aliceStakes of
+    [] -> debug "Alice has no stakes"
+    stakes -> debug $ "Alice has " <> show (length stakes) <> " stake(s)"
+
+  debug "=== BOB'S STAKES ==="
+  case bobStakes of
+    [] -> debug "Bob has no stakes"
+    stakes -> debug $ "Bob has " <> show (length stakes) <> " stake(s)"

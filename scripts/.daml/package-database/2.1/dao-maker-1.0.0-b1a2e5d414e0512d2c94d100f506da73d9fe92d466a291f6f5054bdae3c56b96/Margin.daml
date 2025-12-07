@@ -1,0 +1,1133 @@
+{-# LANGUAGE NoDamlSyntax #-}
+{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE NoOverloadedStrings #-}
+{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE MagicHash #-}
+{-# LANGUAGE DatatypeContexts #-}
+{-# OPTIONS_GHC -Wno-unused-imports -Wno-missing-methods -Wno-deprecations -Wno-x-exceptions -Wno-x-ledger-time -Wno-x-crypto #-}
+module Margin (
+        type Margin.MarginPosition(Margin.MarginPosition, asset,
+                                   currentPrice, dao, entryPrice, leverage, marginAccountCid,
+                                   marginUsed, owner, pnl, positionType, quantity),
+        type Margin.UpdatePrice(Margin.UpdatePrice, newPrice, updater),
+        type Margin.ClosePosition(Margin.ClosePosition, exitPrice),
+        type Margin.ConfidentialMarginSettlement(Margin.ConfidentialMarginSettlement,
+                                                 borrower, confidentialAmount, dao, lender,
+                                                 settlementTime, status),
+        type Margin.ExecuteConfidentialSettlement(Margin.ExecuteConfidentialSettlement,
+                                                  settlementProof),
+        type Margin.ForceSettlement(Margin.ForceSettlement, daoApproval),
+        type Margin.EmergencyPauseControl(Margin.EmergencyPauseControl,
+                                          dao, isPaused, pausedAt, reason),
+        type Margin.TriggerEmergencyPause(Margin.TriggerEmergencyPause,
+                                          reason),
+        type Margin.PositionType(Margin.Long, Margin.Short),
+        type Margin.SettlementStatus(Margin.Pending, Margin.Settled,
+                                     Margin.Failed),
+        type Margin.MarginAccount(Margin.MarginAccount, borrowedAmount,
+                                  collateralAmount, dao, lastUpdated, liquidationPrice,
+                                  maintenanceMargin, marginRatio, owner),
+        type Margin.DepositCollateral(Margin.DepositCollateral, amount,
+                                      tokenCid),
+        type Margin.Borrow(Margin.Borrow, borrowAmount, treasuryCid),
+        type Margin.Repay(Margin.Repay, repayAmount, tokenCid,
+                          treasuryCid),
+        type Margin.WithdrawCollateral(Margin.WithdrawCollateral,
+                                       withdrawAmount),
+        type Margin.CheckMarginHealth(Margin.CheckMarginHealth),
+        type Margin.Liquidate(Margin.Liquidate, liquidator, treasuryCid),
+        type Margin.ResumeOperations(Margin.ResumeOperations,
+                                     verificationHash),
+        type Margin.CheckPauseStatus(Margin.CheckPauseStatus)
+    ) where
+import Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Desugar
+import Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Exception
+    ()
+import Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Fail
+    ()
+import Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Interface.AnyView
+    ()
+import CurrentSdk.DA.Internal.LF
+import Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Prelude
+    ()
+import Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record
+import CurrentSdk.DA.Internal.Template
+import Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions
+import Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions
+    ()
+import Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Time
+    ()
+import CurrentSdk.Data.String
+import Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Classes
+import CurrentSdk.GHC.Err
+import Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Show
+import CurrentSdk.GHC.Types
+import Governance
+import GovernanceToken
+data CheckPauseStatus = CheckPauseStatus {}
+data ResumeOperations
+  = ResumeOperations {verificationHash :: CurrentSdk.GHC.Types.Text}
+data TriggerEmergencyPause
+  = TriggerEmergencyPause {reason :: CurrentSdk.GHC.Types.Text}
+data CurrentSdk.GHC.Types.DamlTemplate => EmergencyPauseControl
+  = EmergencyPauseControl {dao :: CurrentSdk.DA.Internal.LF.Party,
+                           pausedAt :: CurrentSdk.DA.Internal.LF.Time,
+                           reason :: CurrentSdk.GHC.Types.Text,
+                           isPaused :: CurrentSdk.GHC.Types.Bool}
+data ForceSettlement
+  = ForceSettlement {daoApproval :: CurrentSdk.GHC.Types.Bool}
+data ExecuteConfidentialSettlement
+  = ExecuteConfidentialSettlement {settlementProof :: CurrentSdk.GHC.Types.Text}
+data CurrentSdk.GHC.Types.DamlTemplate => ConfidentialMarginSettlement
+  = ConfidentialMarginSettlement {borrower :: CurrentSdk.DA.Internal.LF.Party,
+                                  lender :: CurrentSdk.DA.Internal.LF.Party,
+                                  dao :: CurrentSdk.DA.Internal.LF.Party,
+                                  confidentialAmount :: CurrentSdk.GHC.Types.Text,
+                                  settlementTime :: CurrentSdk.DA.Internal.LF.Time,
+                                  status :: Margin.SettlementStatus}
+data ClosePosition
+  = ClosePosition {exitPrice :: (CurrentSdk.GHC.Types.Numeric 10)}
+data UpdatePrice
+  = UpdatePrice {newPrice :: (CurrentSdk.GHC.Types.Numeric 10),
+                 updater :: CurrentSdk.DA.Internal.LF.Party}
+data CurrentSdk.GHC.Types.DamlTemplate => MarginPosition
+  = MarginPosition {owner :: CurrentSdk.DA.Internal.LF.Party,
+                    dao :: CurrentSdk.DA.Internal.LF.Party,
+                    marginAccountCid :: (CurrentSdk.DA.Internal.LF.ContractId Margin.MarginAccount),
+                    positionType :: Margin.PositionType,
+                    asset :: CurrentSdk.GHC.Types.Text,
+                    entryPrice :: (CurrentSdk.GHC.Types.Numeric 10),
+                    quantity :: (CurrentSdk.GHC.Types.Numeric 10),
+                    leverage :: (CurrentSdk.GHC.Types.Numeric 10),
+                    currentPrice :: (CurrentSdk.GHC.Types.Numeric 10),
+                    pnl :: (CurrentSdk.GHC.Types.Numeric 10),
+                    marginUsed :: (CurrentSdk.GHC.Types.Numeric 10)}
+data Liquidate
+  = Liquidate {liquidator :: CurrentSdk.DA.Internal.LF.Party,
+               treasuryCid :: (CurrentSdk.DA.Internal.LF.ContractId Governance.Treasury)}
+data CheckMarginHealth = CheckMarginHealth {}
+data WithdrawCollateral
+  = WithdrawCollateral {withdrawAmount :: (CurrentSdk.GHC.Types.Numeric 10)}
+data Repay
+  = Repay {tokenCid :: (CurrentSdk.DA.Internal.LF.ContractId GovernanceToken.GovernanceToken),
+           repayAmount :: (CurrentSdk.GHC.Types.Numeric 10),
+           treasuryCid :: (CurrentSdk.DA.Internal.LF.ContractId Governance.Treasury)}
+data Borrow
+  = Borrow {borrowAmount :: (CurrentSdk.GHC.Types.Numeric 10),
+            treasuryCid :: (CurrentSdk.DA.Internal.LF.ContractId Governance.Treasury)}
+data DepositCollateral
+  = DepositCollateral {tokenCid :: (CurrentSdk.DA.Internal.LF.ContractId GovernanceToken.GovernanceToken),
+                       amount :: (CurrentSdk.GHC.Types.Numeric 10)}
+data CurrentSdk.GHC.Types.DamlTemplate => MarginAccount
+  = MarginAccount {owner :: CurrentSdk.DA.Internal.LF.Party,
+                   dao :: CurrentSdk.DA.Internal.LF.Party,
+                   collateralAmount :: (CurrentSdk.GHC.Types.Numeric 10),
+                   borrowedAmount :: (CurrentSdk.GHC.Types.Numeric 10),
+                   marginRatio :: (CurrentSdk.GHC.Types.Numeric 10),
+                   maintenanceMargin :: (CurrentSdk.GHC.Types.Numeric 10),
+                   liquidationPrice :: (CurrentSdk.GHC.Types.Numeric 10),
+                   lastUpdated :: CurrentSdk.DA.Internal.LF.Time}
+data SettlementStatus = Pending | Settled | Failed
+data PositionType = Long | Short
+instance (() =>
+          Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Show.Show Margin.WithdrawCollateral) where
+  showsPrec _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  show _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  showList _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Show.Show Margin.UpdatePrice) where
+  showsPrec _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  show _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  showList _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Show.Show Margin.TriggerEmergencyPause) where
+  showsPrec _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  show _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  showList _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Show.Show Margin.SettlementStatus) where
+  showsPrec _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  show _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  showList _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Show.Show Margin.ResumeOperations) where
+  showsPrec _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  show _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  showList _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Show.Show Margin.Repay) where
+  showsPrec _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  show _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  showList _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Show.Show Margin.PositionType) where
+  showsPrec _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  show _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  showList _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Show.Show Margin.MarginPosition) where
+  showsPrec _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  show _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  showList _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Show.Show Margin.MarginAccount) where
+  showsPrec _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  show _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  showList _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Show.Show Margin.Liquidate) where
+  showsPrec _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  show _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  showList _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Show.Show Margin.ForceSettlement) where
+  showsPrec _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  show _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  showList _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Show.Show Margin.ExecuteConfidentialSettlement) where
+  showsPrec _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  show _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  showList _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Show.Show Margin.EmergencyPauseControl) where
+  showsPrec _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  show _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  showList _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Show.Show Margin.DepositCollateral) where
+  showsPrec _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  show _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  showList _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Show.Show Margin.ConfidentialMarginSettlement) where
+  showsPrec _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  show _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  showList _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Show.Show Margin.ClosePosition) where
+  showsPrec _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  show _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  showList _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Show.Show Margin.CheckPauseStatus) where
+  showsPrec _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  show _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  showList _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Show.Show Margin.CheckMarginHealth) where
+  showsPrec _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  show _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  showList _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Show.Show Margin.Borrow) where
+  showsPrec _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  show _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  showList _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "withdrawAmount" Margin.WithdrawCollateral (CurrentSdk.GHC.Types.Numeric 10))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "verificationHash" Margin.ResumeOperations CurrentSdk.GHC.Types.Text)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "updater" Margin.UpdatePrice CurrentSdk.DA.Internal.LF.Party)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "treasuryCid" Margin.Repay (CurrentSdk.DA.Internal.LF.ContractId Governance.Treasury))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "treasuryCid" Margin.Liquidate (CurrentSdk.DA.Internal.LF.ContractId Governance.Treasury))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "treasuryCid" Margin.Borrow (CurrentSdk.DA.Internal.LF.ContractId Governance.Treasury))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "tokenCid" Margin.Repay (CurrentSdk.DA.Internal.LF.ContractId GovernanceToken.GovernanceToken))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "tokenCid" Margin.DepositCollateral (CurrentSdk.DA.Internal.LF.ContractId GovernanceToken.GovernanceToken))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "status" Margin.ConfidentialMarginSettlement Margin.SettlementStatus)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "settlementTime" Margin.ConfidentialMarginSettlement CurrentSdk.DA.Internal.LF.Time)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "settlementProof" Margin.ExecuteConfidentialSettlement CurrentSdk.GHC.Types.Text)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "repayAmount" Margin.Repay (CurrentSdk.GHC.Types.Numeric 10))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "reason" Margin.TriggerEmergencyPause CurrentSdk.GHC.Types.Text)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "reason" Margin.EmergencyPauseControl CurrentSdk.GHC.Types.Text)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "quantity" Margin.MarginPosition (CurrentSdk.GHC.Types.Numeric 10))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "positionType" Margin.MarginPosition Margin.PositionType)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "pnl" Margin.MarginPosition (CurrentSdk.GHC.Types.Numeric 10))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "pausedAt" Margin.EmergencyPauseControl CurrentSdk.DA.Internal.LF.Time)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "owner" Margin.MarginPosition CurrentSdk.DA.Internal.LF.Party)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "owner" Margin.MarginAccount CurrentSdk.DA.Internal.LF.Party)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "newPrice" Margin.UpdatePrice (CurrentSdk.GHC.Types.Numeric 10))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "marginUsed" Margin.MarginPosition (CurrentSdk.GHC.Types.Numeric 10))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "marginRatio" Margin.MarginAccount (CurrentSdk.GHC.Types.Numeric 10))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "marginAccountCid" Margin.MarginPosition (CurrentSdk.DA.Internal.LF.ContractId Margin.MarginAccount))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "maintenanceMargin" Margin.MarginAccount (CurrentSdk.GHC.Types.Numeric 10))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "liquidator" Margin.Liquidate CurrentSdk.DA.Internal.LF.Party)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "liquidationPrice" Margin.MarginAccount (CurrentSdk.GHC.Types.Numeric 10))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "leverage" Margin.MarginPosition (CurrentSdk.GHC.Types.Numeric 10))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "lender" Margin.ConfidentialMarginSettlement CurrentSdk.DA.Internal.LF.Party)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "lastUpdated" Margin.MarginAccount CurrentSdk.DA.Internal.LF.Time)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "isPaused" Margin.EmergencyPauseControl CurrentSdk.GHC.Types.Bool)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "exitPrice" Margin.ClosePosition (CurrentSdk.GHC.Types.Numeric 10))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "entryPrice" Margin.MarginPosition (CurrentSdk.GHC.Types.Numeric 10))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "daoApproval" Margin.ForceSettlement CurrentSdk.GHC.Types.Bool)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "dao" Margin.MarginPosition CurrentSdk.DA.Internal.LF.Party)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "dao" Margin.MarginAccount CurrentSdk.DA.Internal.LF.Party)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "dao" Margin.EmergencyPauseControl CurrentSdk.DA.Internal.LF.Party)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "dao" Margin.ConfidentialMarginSettlement CurrentSdk.DA.Internal.LF.Party)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "currentPrice" Margin.MarginPosition (CurrentSdk.GHC.Types.Numeric 10))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "confidentialAmount" Margin.ConfidentialMarginSettlement CurrentSdk.GHC.Types.Text)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "collateralAmount" Margin.MarginAccount (CurrentSdk.GHC.Types.Numeric 10))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "borrower" Margin.ConfidentialMarginSettlement CurrentSdk.DA.Internal.LF.Party)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "borrowedAmount" Margin.MarginAccount (CurrentSdk.GHC.Types.Numeric 10))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "borrowAmount" Margin.Borrow (CurrentSdk.GHC.Types.Numeric 10))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "asset" Margin.MarginPosition CurrentSdk.GHC.Types.Text)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "amount" Margin.DepositCollateral (CurrentSdk.GHC.Types.Numeric 10))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasToAnyTemplate Margin.MarginPosition) where
+  _toAnyTemplate _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasToAnyTemplate Margin.MarginAccount) where
+  _toAnyTemplate _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasToAnyTemplate Margin.EmergencyPauseControl) where
+  _toAnyTemplate _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasToAnyTemplate Margin.ConfidentialMarginSettlement) where
+  _toAnyTemplate _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasToAnyChoice Margin.MarginPosition Margin.UpdatePrice (CurrentSdk.DA.Internal.LF.ContractId Margin.MarginPosition)) where
+  _toAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasToAnyChoice Margin.MarginPosition Margin.ClosePosition (CurrentSdk.DA.Internal.LF.ContractId Margin.MarginAccount)) where
+  _toAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasToAnyChoice Margin.MarginPosition CurrentSdk.DA.Internal.Template.Archive ()) where
+  _toAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasToAnyChoice Margin.MarginAccount Margin.WithdrawCollateral (((,) (CurrentSdk.DA.Internal.LF.ContractId Margin.MarginAccount)) (CurrentSdk.DA.Internal.LF.ContractId GovernanceToken.GovernanceToken))) where
+  _toAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasToAnyChoice Margin.MarginAccount Margin.Repay (CurrentSdk.DA.Internal.LF.ContractId Margin.MarginAccount)) where
+  _toAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasToAnyChoice Margin.MarginAccount Margin.Liquidate (CurrentSdk.DA.Internal.LF.ContractId Margin.MarginAccount)) where
+  _toAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasToAnyChoice Margin.MarginAccount Margin.DepositCollateral (CurrentSdk.DA.Internal.LF.ContractId Margin.MarginAccount)) where
+  _toAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasToAnyChoice Margin.MarginAccount Margin.CheckMarginHealth CurrentSdk.GHC.Types.Bool) where
+  _toAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasToAnyChoice Margin.MarginAccount Margin.Borrow (CurrentSdk.DA.Internal.LF.ContractId Margin.MarginAccount)) where
+  _toAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasToAnyChoice Margin.MarginAccount CurrentSdk.DA.Internal.Template.Archive ()) where
+  _toAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasToAnyChoice Margin.EmergencyPauseControl Margin.TriggerEmergencyPause (CurrentSdk.DA.Internal.LF.ContractId Margin.EmergencyPauseControl)) where
+  _toAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasToAnyChoice Margin.EmergencyPauseControl Margin.ResumeOperations (CurrentSdk.DA.Internal.LF.ContractId Margin.EmergencyPauseControl)) where
+  _toAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasToAnyChoice Margin.EmergencyPauseControl Margin.CheckPauseStatus CurrentSdk.GHC.Types.Bool) where
+  _toAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasToAnyChoice Margin.EmergencyPauseControl CurrentSdk.DA.Internal.Template.Archive ()) where
+  _toAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasToAnyChoice Margin.ConfidentialMarginSettlement Margin.ForceSettlement (CurrentSdk.DA.Internal.LF.ContractId Margin.ConfidentialMarginSettlement)) where
+  _toAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasToAnyChoice Margin.ConfidentialMarginSettlement Margin.ExecuteConfidentialSettlement (CurrentSdk.DA.Internal.LF.ContractId Margin.ConfidentialMarginSettlement)) where
+  _toAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasToAnyChoice Margin.ConfidentialMarginSettlement CurrentSdk.DA.Internal.Template.Archive ()) where
+  _toAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasTemplateTypeRep Margin.MarginPosition) where
+  _templateTypeRep _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasTemplateTypeRep Margin.MarginAccount) where
+  _templateTypeRep _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasTemplateTypeRep Margin.EmergencyPauseControl) where
+  _templateTypeRep _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasTemplateTypeRep Margin.ConfidentialMarginSettlement) where
+  _templateTypeRep _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasSignatory Margin.MarginPosition) where
+  signatory _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasSignatory Margin.MarginAccount) where
+  signatory _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasSignatory Margin.EmergencyPauseControl) where
+  signatory _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasSignatory Margin.ConfidentialMarginSettlement) where
+  signatory _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasObserver Margin.MarginPosition) where
+  observer _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasObserver Margin.MarginAccount) where
+  observer _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasObserver Margin.EmergencyPauseControl) where
+  observer _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasObserver Margin.ConfidentialMarginSettlement) where
+  observer _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Desugar.HasIsInterfaceType Margin.MarginPosition) where
+  _isInterfaceType _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Desugar.HasIsInterfaceType Margin.MarginAccount) where
+  _isInterfaceType _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Desugar.HasIsInterfaceType Margin.EmergencyPauseControl) where
+  _isInterfaceType _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Desugar.HasIsInterfaceType Margin.ConfidentialMarginSettlement) where
+  _isInterfaceType _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasFromAnyTemplate Margin.MarginPosition) where
+  _fromAnyTemplate _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasFromAnyTemplate Margin.MarginAccount) where
+  _fromAnyTemplate _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasFromAnyTemplate Margin.EmergencyPauseControl) where
+  _fromAnyTemplate _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasFromAnyTemplate Margin.ConfidentialMarginSettlement) where
+  _fromAnyTemplate _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasFromAnyChoice Margin.MarginPosition Margin.UpdatePrice (CurrentSdk.DA.Internal.LF.ContractId Margin.MarginPosition)) where
+  _fromAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasFromAnyChoice Margin.MarginPosition Margin.ClosePosition (CurrentSdk.DA.Internal.LF.ContractId Margin.MarginAccount)) where
+  _fromAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasFromAnyChoice Margin.MarginPosition CurrentSdk.DA.Internal.Template.Archive ()) where
+  _fromAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasFromAnyChoice Margin.MarginAccount Margin.WithdrawCollateral (((,) (CurrentSdk.DA.Internal.LF.ContractId Margin.MarginAccount)) (CurrentSdk.DA.Internal.LF.ContractId GovernanceToken.GovernanceToken))) where
+  _fromAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasFromAnyChoice Margin.MarginAccount Margin.Repay (CurrentSdk.DA.Internal.LF.ContractId Margin.MarginAccount)) where
+  _fromAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasFromAnyChoice Margin.MarginAccount Margin.Liquidate (CurrentSdk.DA.Internal.LF.ContractId Margin.MarginAccount)) where
+  _fromAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasFromAnyChoice Margin.MarginAccount Margin.DepositCollateral (CurrentSdk.DA.Internal.LF.ContractId Margin.MarginAccount)) where
+  _fromAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasFromAnyChoice Margin.MarginAccount Margin.CheckMarginHealth CurrentSdk.GHC.Types.Bool) where
+  _fromAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasFromAnyChoice Margin.MarginAccount Margin.Borrow (CurrentSdk.DA.Internal.LF.ContractId Margin.MarginAccount)) where
+  _fromAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasFromAnyChoice Margin.MarginAccount CurrentSdk.DA.Internal.Template.Archive ()) where
+  _fromAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasFromAnyChoice Margin.EmergencyPauseControl Margin.TriggerEmergencyPause (CurrentSdk.DA.Internal.LF.ContractId Margin.EmergencyPauseControl)) where
+  _fromAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasFromAnyChoice Margin.EmergencyPauseControl Margin.ResumeOperations (CurrentSdk.DA.Internal.LF.ContractId Margin.EmergencyPauseControl)) where
+  _fromAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasFromAnyChoice Margin.EmergencyPauseControl Margin.CheckPauseStatus CurrentSdk.GHC.Types.Bool) where
+  _fromAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasFromAnyChoice Margin.EmergencyPauseControl CurrentSdk.DA.Internal.Template.Archive ()) where
+  _fromAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasFromAnyChoice Margin.ConfidentialMarginSettlement Margin.ForceSettlement (CurrentSdk.DA.Internal.LF.ContractId Margin.ConfidentialMarginSettlement)) where
+  _fromAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasFromAnyChoice Margin.ConfidentialMarginSettlement Margin.ExecuteConfidentialSettlement (CurrentSdk.DA.Internal.LF.ContractId Margin.ConfidentialMarginSettlement)) where
+  _fromAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasFromAnyChoice Margin.ConfidentialMarginSettlement CurrentSdk.DA.Internal.Template.Archive ()) where
+  _fromAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasFetch Margin.MarginPosition) where
+  fetch _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasFetch Margin.MarginAccount) where
+  fetch _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasFetch Margin.EmergencyPauseControl) where
+  fetch _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasFetch Margin.ConfidentialMarginSettlement) where
+  fetch _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasExercise Margin.MarginPosition Margin.UpdatePrice (CurrentSdk.DA.Internal.LF.ContractId Margin.MarginPosition)) where
+  exercise _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasExercise Margin.MarginPosition Margin.ClosePosition (CurrentSdk.DA.Internal.LF.ContractId Margin.MarginAccount)) where
+  exercise _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasExercise Margin.MarginPosition CurrentSdk.DA.Internal.Template.Archive ()) where
+  exercise _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasExercise Margin.MarginAccount Margin.WithdrawCollateral (((,) (CurrentSdk.DA.Internal.LF.ContractId Margin.MarginAccount)) (CurrentSdk.DA.Internal.LF.ContractId GovernanceToken.GovernanceToken))) where
+  exercise _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasExercise Margin.MarginAccount Margin.Repay (CurrentSdk.DA.Internal.LF.ContractId Margin.MarginAccount)) where
+  exercise _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasExercise Margin.MarginAccount Margin.Liquidate (CurrentSdk.DA.Internal.LF.ContractId Margin.MarginAccount)) where
+  exercise _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasExercise Margin.MarginAccount Margin.DepositCollateral (CurrentSdk.DA.Internal.LF.ContractId Margin.MarginAccount)) where
+  exercise _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasExercise Margin.MarginAccount Margin.CheckMarginHealth CurrentSdk.GHC.Types.Bool) where
+  exercise _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasExercise Margin.MarginAccount Margin.Borrow (CurrentSdk.DA.Internal.LF.ContractId Margin.MarginAccount)) where
+  exercise _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasExercise Margin.MarginAccount CurrentSdk.DA.Internal.Template.Archive ()) where
+  exercise _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasExercise Margin.EmergencyPauseControl Margin.TriggerEmergencyPause (CurrentSdk.DA.Internal.LF.ContractId Margin.EmergencyPauseControl)) where
+  exercise _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasExercise Margin.EmergencyPauseControl Margin.ResumeOperations (CurrentSdk.DA.Internal.LF.ContractId Margin.EmergencyPauseControl)) where
+  exercise _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasExercise Margin.EmergencyPauseControl Margin.CheckPauseStatus CurrentSdk.GHC.Types.Bool) where
+  exercise _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasExercise Margin.EmergencyPauseControl CurrentSdk.DA.Internal.Template.Archive ()) where
+  exercise _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasExercise Margin.ConfidentialMarginSettlement Margin.ForceSettlement (CurrentSdk.DA.Internal.LF.ContractId Margin.ConfidentialMarginSettlement)) where
+  exercise _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasExercise Margin.ConfidentialMarginSettlement Margin.ExecuteConfidentialSettlement (CurrentSdk.DA.Internal.LF.ContractId Margin.ConfidentialMarginSettlement)) where
+  exercise _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasExercise Margin.ConfidentialMarginSettlement CurrentSdk.DA.Internal.Template.Archive ()) where
+  exercise _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasEnsure Margin.MarginPosition) where
+  ensure _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasEnsure Margin.MarginAccount) where
+  ensure _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasEnsure Margin.EmergencyPauseControl) where
+  ensure _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasEnsure Margin.ConfidentialMarginSettlement) where
+  ensure _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasCreate Margin.MarginPosition) where
+  create _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasCreate Margin.MarginAccount) where
+  create _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasCreate Margin.EmergencyPauseControl) where
+  create _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasCreate Margin.ConfidentialMarginSettlement) where
+  create _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasArchive Margin.MarginPosition) where
+  archive _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasArchive Margin.MarginAccount) where
+  archive _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasArchive Margin.EmergencyPauseControl) where
+  archive _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasArchive Margin.ConfidentialMarginSettlement) where
+  archive _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "withdrawAmount" Margin.WithdrawCollateral (CurrentSdk.GHC.Types.Numeric 10))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "verificationHash" Margin.ResumeOperations CurrentSdk.GHC.Types.Text)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "updater" Margin.UpdatePrice CurrentSdk.DA.Internal.LF.Party)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "treasuryCid" Margin.Repay (CurrentSdk.DA.Internal.LF.ContractId Governance.Treasury))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "treasuryCid" Margin.Liquidate (CurrentSdk.DA.Internal.LF.ContractId Governance.Treasury))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "treasuryCid" Margin.Borrow (CurrentSdk.DA.Internal.LF.ContractId Governance.Treasury))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "tokenCid" Margin.Repay (CurrentSdk.DA.Internal.LF.ContractId GovernanceToken.GovernanceToken))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "tokenCid" Margin.DepositCollateral (CurrentSdk.DA.Internal.LF.ContractId GovernanceToken.GovernanceToken))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "status" Margin.ConfidentialMarginSettlement Margin.SettlementStatus)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "settlementTime" Margin.ConfidentialMarginSettlement CurrentSdk.DA.Internal.LF.Time)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "settlementProof" Margin.ExecuteConfidentialSettlement CurrentSdk.GHC.Types.Text)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "repayAmount" Margin.Repay (CurrentSdk.GHC.Types.Numeric 10))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "reason" Margin.TriggerEmergencyPause CurrentSdk.GHC.Types.Text)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "reason" Margin.EmergencyPauseControl CurrentSdk.GHC.Types.Text)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "quantity" Margin.MarginPosition (CurrentSdk.GHC.Types.Numeric 10))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "positionType" Margin.MarginPosition Margin.PositionType)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "pnl" Margin.MarginPosition (CurrentSdk.GHC.Types.Numeric 10))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "pausedAt" Margin.EmergencyPauseControl CurrentSdk.DA.Internal.LF.Time)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "owner" Margin.MarginPosition CurrentSdk.DA.Internal.LF.Party)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "owner" Margin.MarginAccount CurrentSdk.DA.Internal.LF.Party)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "newPrice" Margin.UpdatePrice (CurrentSdk.GHC.Types.Numeric 10))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "marginUsed" Margin.MarginPosition (CurrentSdk.GHC.Types.Numeric 10))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "marginRatio" Margin.MarginAccount (CurrentSdk.GHC.Types.Numeric 10))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "marginAccountCid" Margin.MarginPosition (CurrentSdk.DA.Internal.LF.ContractId Margin.MarginAccount))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "maintenanceMargin" Margin.MarginAccount (CurrentSdk.GHC.Types.Numeric 10))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "liquidator" Margin.Liquidate CurrentSdk.DA.Internal.LF.Party)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "liquidationPrice" Margin.MarginAccount (CurrentSdk.GHC.Types.Numeric 10))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "leverage" Margin.MarginPosition (CurrentSdk.GHC.Types.Numeric 10))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "lender" Margin.ConfidentialMarginSettlement CurrentSdk.DA.Internal.LF.Party)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "lastUpdated" Margin.MarginAccount CurrentSdk.DA.Internal.LF.Time)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "isPaused" Margin.EmergencyPauseControl CurrentSdk.GHC.Types.Bool)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "exitPrice" Margin.ClosePosition (CurrentSdk.GHC.Types.Numeric 10))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "entryPrice" Margin.MarginPosition (CurrentSdk.GHC.Types.Numeric 10))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "daoApproval" Margin.ForceSettlement CurrentSdk.GHC.Types.Bool)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "dao" Margin.MarginPosition CurrentSdk.DA.Internal.LF.Party)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "dao" Margin.MarginAccount CurrentSdk.DA.Internal.LF.Party)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "dao" Margin.EmergencyPauseControl CurrentSdk.DA.Internal.LF.Party)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "dao" Margin.ConfidentialMarginSettlement CurrentSdk.DA.Internal.LF.Party)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "currentPrice" Margin.MarginPosition (CurrentSdk.GHC.Types.Numeric 10))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "confidentialAmount" Margin.ConfidentialMarginSettlement CurrentSdk.GHC.Types.Text)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "collateralAmount" Margin.MarginAccount (CurrentSdk.GHC.Types.Numeric 10))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "borrower" Margin.ConfidentialMarginSettlement CurrentSdk.DA.Internal.LF.Party)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "borrowedAmount" Margin.MarginAccount (CurrentSdk.GHC.Types.Numeric 10))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "borrowAmount" Margin.Borrow (CurrentSdk.GHC.Types.Numeric 10))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "asset" Margin.MarginPosition CurrentSdk.GHC.Types.Text)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "amount" Margin.DepositCollateral (CurrentSdk.GHC.Types.Numeric 10))
+instance (() =>
+          Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Classes.Eq Margin.WithdrawCollateral) where
+  (==) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (/=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Classes.Eq Margin.UpdatePrice) where
+  (==) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (/=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Classes.Eq Margin.TriggerEmergencyPause) where
+  (==) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (/=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Classes.Eq Margin.SettlementStatus) where
+  (==) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (/=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Classes.Eq Margin.ResumeOperations) where
+  (==) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (/=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Classes.Eq Margin.Repay) where
+  (==) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (/=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Classes.Eq Margin.PositionType) where
+  (==) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (/=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Classes.Eq Margin.MarginPosition) where
+  (==) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (/=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Classes.Eq Margin.MarginAccount) where
+  (==) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (/=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Classes.Eq Margin.Liquidate) where
+  (==) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (/=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Classes.Eq Margin.ForceSettlement) where
+  (==) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (/=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Classes.Eq Margin.ExecuteConfidentialSettlement) where
+  (==) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (/=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Classes.Eq Margin.EmergencyPauseControl) where
+  (==) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (/=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Classes.Eq Margin.DepositCollateral) where
+  (==) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (/=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Classes.Eq Margin.ConfidentialMarginSettlement) where
+  (==) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (/=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Classes.Eq Margin.ClosePosition) where
+  (==) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (/=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Classes.Eq Margin.CheckPauseStatus) where
+  (==) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (/=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Classes.Eq Margin.CheckMarginHealth) where
+  (==) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (/=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Classes.Eq Margin.Borrow) where
+  (==) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (/=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))

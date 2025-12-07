@@ -1,0 +1,86 @@
+module DepositTest where
+
+import Daml.Script
+import GovernanceToken
+import Margin
+import DAOSetup
+import Governance
+
+testDepositTransaction : Script ()
+testDepositTransaction = script do
+  dao <- allocateParty "DAO"
+  alice <- allocateParty "Alice"
+  
+  debug "=== TEST: Deposit Collateral Transaction ==="
+  
+  -- 1. Create DAO
+  debug "\n1. Setting up DAO..."
+  configCid <- submit dao do
+    createCmd DAOConfig with
+      dao = dao
+      daoName = "Test DAO"
+      tokenSymbol = "TEST"
+      initialTreasuryBalance = 10000.0
+      defaultQuorum = 100.0
+      defaultVotingPeriodDays = 7
+      members = [alice]
+      defaultMaintenanceMargin = 1.5
+      defaultLiquidationPenalty = 0.1
+  
+  (adminCid, poolCid, treasuryCid) <- submit dao do
+    exerciseCmd configCid InitializeDAO
+  
+  debug "✅ DAO created"
+  
+  -- 2. Issue tokens
+  debug "\n2. Issuing tokens to Alice..."
+  tokenCid <- submit dao do
+    exerciseCmd adminCid IssueTokens with
+      recipient = alice
+      amount = 1000.0
+  
+  debug "✅ Tokens issued"
+  debug $ "Token contract: " <> show tokenCid
+  
+  -- 3. Create margin account
+  debug "\n3. Creating margin account with 0 collateral..."
+  currentTime <- getTime
+  marginCid <- submit dao do
+    createCmd MarginAccount with
+      owner = alice
+      dao = dao
+      collateralAmount = 0.0
+      borrowedAmount = 0.0
+      marginRatio = 999.0
+      maintenanceMargin = 1.5
+      liquidationPrice = 0.0
+      lastUpdated = currentTime
+  
+  debug "✅ Margin account created"
+  debug $ "Margin account: " <> show marginCid
+  
+  -- 4. Deposit collateral
+  debug "\n4. EXECUTING DEPOSIT COLLATERAL..."
+  debug $ "Depositing 500 tokens from Alice"
+  
+  updatedMarginCid <- submitMulti [alice, dao] [] do
+    exerciseCmd marginCid DepositCollateral with
+      tokenCid = tokenCid
+      amount = 500.0
+  
+  debug "✅ DEPOSIT COMPLETE!"
+  debug $ "Updated margin account: " <> show updatedMarginCid
+  
+  -- 5. Check final state
+  debug "\n5. Verifying deposit..."
+  margins <- query @MarginAccount alice
+  
+  case margins of
+    [] -> debug "❌ ERROR: No margin accounts!"
+    [(_, marginData)] -> do
+      debug $ "✅ Collateral deposited: " <> show marginData.collateralAmount <> " tokens"
+      debug $ "✅ Margin ratio: " <> show marginData.marginRatio
+      assertMsg "Collateral should be 500" (marginData.collateralAmount == 500.0)
+    _ -> debug "❌ ERROR: Multiple margin accounts"
+  
+  debug "\n✅ TEST PASSED: Deposit transaction successful!"

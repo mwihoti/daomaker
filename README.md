@@ -2,6 +2,17 @@
 
 A fully on-chain Decentralized Autonomous Organization (DAO) implementation built with Daml for the Canton Network.
 
+## 🔗 Quick Links
+
+- **📊 Demo & Proof of Concept**: [DEMO_PROOF_OF_CONCEPT.md](DEMO_PROOF_OF_CONCEPT.md) - **START HERE FOR JUDGES**
+- **🎬 Live Test Execution**: [LIVE_TEST_EXECUTION.md](LIVE_TEST_EXECUTION.md) - See actual test output
+- **🏗️ Architecture & Visuals**: [ARCHITECTURE_VISUAL_GUIDE.md](ARCHITECTURE_VISUAL_GUIDE.md) - System design diagrams
+- **📦 Deployment Guide**: [DEPLOYMENT.md](DEPLOYMENT.md) - How to deploy to Canton
+- **🎮 Interactive Tutorial**: [INTERACTIVE.md](INTERACTIVE.md) - Step-by-step usage
+- **⚡ Quick Reference**: [QUICKREF.md](QUICKREF.md) - Commands & operations
+- **📈 Project Status**: [STATUS.md](STATUS.md) - Current progress
+- **📡 GitHub Repository**: [github.com/mwihoti/daomaker](https://github.com/mwihoti/daomaker) - Full source code
+
 ## 🎯 Features
 
 ### 1. **Governance Token System**
@@ -36,11 +47,14 @@ A fully on-chain Decentralized Autonomous Organization (DAO) implementation buil
 - Yield distribution to stakers
 - Beneficiary management
 
-### 5. **Complete DAO Setup**
-- Initialize entire DAO system with one action
-- Member management
-- Governance statistics tracking
-- Configurable parameters (quorum, voting periods)
+### 6. **Margin Protocol & Risk Management**
+- Margin accounts with collateral management
+- Borrow against collateral with margin ratio tracking
+- Automated liquidation for under-collateralized positions
+- Margin position tracking (long/short) with leverage
+- DAO-governed margin parameters (maintenance margin, liquidation penalties)
+- Confidential settlements using Canton privacy features
+- Risk monitoring and emergency shutdown capabilities (quorum, voting periods)
 
 ## 📁 Project Structure
 
@@ -52,7 +66,9 @@ dao/
     ├── Staking.daml             # Staking system
     ├── Governance.daml          # Proposals, voting, treasury
     ├── DAOSetup.daml            # DAO initialization
-    └── Test.daml                # Comprehensive test scenarios
+    ├── Margin.daml              # Margin protocol and risk management
+    ├── SimpleTest.daml          # Comprehensive test scenarios
+    └── WorkingInteractive.daml  # Interactive ledger operations
 ```
 
 ## 🏗️ Architecture
@@ -65,7 +81,10 @@ dao/
 4. **StakedPosition** - Individual staking position with voting power
 5. **Proposal** - Governance proposal with voting and execution logic
 6. **Treasury** - DAO treasury holding funds
-7. **DAOConfig** - Configuration and initialization
+7. **MarginAccount** - Margin trading account with collateral management
+8. **MarginPosition** - Individual margin positions (long/short trades)
+9. **ConfidentialMarginSettlement** - Privacy-preserving settlement contracts
+10. **DAOConfig** - Configuration and initialization
 
 ### Data Types
 

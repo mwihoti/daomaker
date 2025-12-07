@@ -1,0 +1,714 @@
+{-# LANGUAGE NoDamlSyntax #-}
+{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE NoOverloadedStrings #-}
+{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE MagicHash #-}
+{-# LANGUAGE DatatypeContexts #-}
+{-# OPTIONS_GHC -Wno-unused-imports -Wno-missing-methods -Wno-deprecations -Wno-x-exceptions -Wno-x-ledger-time -Wno-x-crypto #-}
+module GovernanceToken (
+        type GovernanceToken.Split(GovernanceToken.Split, splitAmount),
+        type GovernanceToken.Merge(GovernanceToken.Merge, otherCid),
+        type GovernanceToken.Spend(GovernanceToken.Spend),
+        type GovernanceToken.TokenIssuanceRequest(GovernanceToken.TokenIssuanceRequest,
+                                                  amount, issuer, recipient, symbol),
+        type GovernanceToken.AcceptIssuance(GovernanceToken.AcceptIssuance),
+        type GovernanceToken.RejectIssuance(GovernanceToken.RejectIssuance),
+        type GovernanceToken.DAOAdmin(GovernanceToken.DAOAdmin, admin,
+                                      daoName, members, tokenSymbol),
+        type GovernanceToken.IssueTokens(GovernanceToken.IssueTokens,
+                                         amount, recipient),
+        type GovernanceToken.GovernanceToken(GovernanceToken.GovernanceToken,
+                                             amount, issuer, owner, symbol),
+        type GovernanceToken.Transfer(GovernanceToken.Transfer, newOwner),
+        type GovernanceToken.AddMember(GovernanceToken.AddMember,
+                                       newMember),
+        type GovernanceToken.RemoveMember(GovernanceToken.RemoveMember,
+                                          memberToRemove)
+    ) where
+import Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Desugar
+import Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Exception
+    ()
+import Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Fail
+    ()
+import Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Interface.AnyView
+    ()
+import CurrentSdk.DA.Internal.LF
+import Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Prelude
+    ()
+import Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record
+import CurrentSdk.DA.Internal.Template
+import Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions
+import Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions
+    ()
+import CurrentSdk.Data.String
+import Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Classes
+import CurrentSdk.GHC.Err
+import Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Show
+import CurrentSdk.GHC.Types
+data RemoveMember
+  = RemoveMember {memberToRemove :: CurrentSdk.DA.Internal.LF.Party}
+data AddMember
+  = AddMember {newMember :: CurrentSdk.DA.Internal.LF.Party}
+data IssueTokens
+  = IssueTokens {recipient :: CurrentSdk.DA.Internal.LF.Party,
+                 amount :: (CurrentSdk.GHC.Types.Numeric 10)}
+data CurrentSdk.GHC.Types.DamlTemplate => DAOAdmin
+  = DAOAdmin {admin :: CurrentSdk.DA.Internal.LF.Party,
+              daoName :: CurrentSdk.GHC.Types.Text,
+              tokenSymbol :: CurrentSdk.GHC.Types.Text,
+              members :: ([] CurrentSdk.DA.Internal.LF.Party)}
+data RejectIssuance = RejectIssuance {}
+data AcceptIssuance = AcceptIssuance {}
+data CurrentSdk.GHC.Types.DamlTemplate => TokenIssuanceRequest
+  = TokenIssuanceRequest {issuer :: CurrentSdk.DA.Internal.LF.Party,
+                          recipient :: CurrentSdk.DA.Internal.LF.Party,
+                          amount :: (CurrentSdk.GHC.Types.Numeric 10),
+                          symbol :: CurrentSdk.GHC.Types.Text}
+data Spend = Spend {}
+data Merge
+  = Merge {otherCid :: (CurrentSdk.DA.Internal.LF.ContractId GovernanceToken.GovernanceToken)}
+data Split
+  = Split {splitAmount :: (CurrentSdk.GHC.Types.Numeric 10)}
+data Transfer
+  = Transfer {newOwner :: CurrentSdk.DA.Internal.LF.Party}
+data CurrentSdk.GHC.Types.DamlTemplate => GovernanceToken
+  = GovernanceToken {issuer :: CurrentSdk.DA.Internal.LF.Party,
+                     owner :: CurrentSdk.DA.Internal.LF.Party,
+                     amount :: (CurrentSdk.GHC.Types.Numeric 10),
+                     symbol :: CurrentSdk.GHC.Types.Text}
+instance (() =>
+          Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Show.Show GovernanceToken.Transfer) where
+  showsPrec _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  show _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  showList _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Show.Show GovernanceToken.TokenIssuanceRequest) where
+  showsPrec _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  show _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  showList _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Show.Show GovernanceToken.Split) where
+  showsPrec _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  show _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  showList _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Show.Show GovernanceToken.Spend) where
+  showsPrec _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  show _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  showList _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Show.Show GovernanceToken.RemoveMember) where
+  showsPrec _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  show _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  showList _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Show.Show GovernanceToken.RejectIssuance) where
+  showsPrec _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  show _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  showList _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Show.Show GovernanceToken.Merge) where
+  showsPrec _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  show _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  showList _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Show.Show GovernanceToken.IssueTokens) where
+  showsPrec _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  show _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  showList _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Show.Show GovernanceToken.GovernanceToken) where
+  showsPrec _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  show _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  showList _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Show.Show GovernanceToken.DAOAdmin) where
+  showsPrec _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  show _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  showList _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Show.Show GovernanceToken.AddMember) where
+  showsPrec _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  show _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  showList _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Show.Show GovernanceToken.AcceptIssuance) where
+  showsPrec _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  show _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  showList _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "tokenSymbol" GovernanceToken.DAOAdmin CurrentSdk.GHC.Types.Text)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "symbol" GovernanceToken.TokenIssuanceRequest CurrentSdk.GHC.Types.Text)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "symbol" GovernanceToken.GovernanceToken CurrentSdk.GHC.Types.Text)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "splitAmount" GovernanceToken.Split (CurrentSdk.GHC.Types.Numeric 10))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "recipient" GovernanceToken.TokenIssuanceRequest CurrentSdk.DA.Internal.LF.Party)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "recipient" GovernanceToken.IssueTokens CurrentSdk.DA.Internal.LF.Party)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "owner" GovernanceToken.GovernanceToken CurrentSdk.DA.Internal.LF.Party)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "otherCid" GovernanceToken.Merge (CurrentSdk.DA.Internal.LF.ContractId GovernanceToken.GovernanceToken))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "newOwner" GovernanceToken.Transfer CurrentSdk.DA.Internal.LF.Party)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "newMember" GovernanceToken.AddMember CurrentSdk.DA.Internal.LF.Party)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "members" GovernanceToken.DAOAdmin ([] CurrentSdk.DA.Internal.LF.Party))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "memberToRemove" GovernanceToken.RemoveMember CurrentSdk.DA.Internal.LF.Party)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "issuer" GovernanceToken.TokenIssuanceRequest CurrentSdk.DA.Internal.LF.Party)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "issuer" GovernanceToken.GovernanceToken CurrentSdk.DA.Internal.LF.Party)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "daoName" GovernanceToken.DAOAdmin CurrentSdk.GHC.Types.Text)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "amount" GovernanceToken.TokenIssuanceRequest (CurrentSdk.GHC.Types.Numeric 10))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "amount" GovernanceToken.IssueTokens (CurrentSdk.GHC.Types.Numeric 10))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "amount" GovernanceToken.GovernanceToken (CurrentSdk.GHC.Types.Numeric 10))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "admin" GovernanceToken.DAOAdmin CurrentSdk.DA.Internal.LF.Party)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasToAnyTemplate GovernanceToken.TokenIssuanceRequest) where
+  _toAnyTemplate _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasToAnyTemplate GovernanceToken.GovernanceToken) where
+  _toAnyTemplate _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasToAnyTemplate GovernanceToken.DAOAdmin) where
+  _toAnyTemplate _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasToAnyChoice GovernanceToken.TokenIssuanceRequest GovernanceToken.RejectIssuance ()) where
+  _toAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasToAnyChoice GovernanceToken.TokenIssuanceRequest CurrentSdk.DA.Internal.Template.Archive ()) where
+  _toAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasToAnyChoice GovernanceToken.TokenIssuanceRequest GovernanceToken.AcceptIssuance (CurrentSdk.DA.Internal.LF.ContractId GovernanceToken.GovernanceToken)) where
+  _toAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasToAnyChoice GovernanceToken.GovernanceToken GovernanceToken.Transfer (CurrentSdk.DA.Internal.LF.ContractId GovernanceToken.GovernanceToken)) where
+  _toAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasToAnyChoice GovernanceToken.GovernanceToken GovernanceToken.Split (((,) (CurrentSdk.DA.Internal.LF.ContractId GovernanceToken.GovernanceToken)) (CurrentSdk.DA.Internal.LF.ContractId GovernanceToken.GovernanceToken))) where
+  _toAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasToAnyChoice GovernanceToken.GovernanceToken GovernanceToken.Spend ()) where
+  _toAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasToAnyChoice GovernanceToken.GovernanceToken GovernanceToken.Merge (CurrentSdk.DA.Internal.LF.ContractId GovernanceToken.GovernanceToken)) where
+  _toAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasToAnyChoice GovernanceToken.GovernanceToken CurrentSdk.DA.Internal.Template.Archive ()) where
+  _toAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasToAnyChoice GovernanceToken.DAOAdmin GovernanceToken.RemoveMember (CurrentSdk.DA.Internal.LF.ContractId GovernanceToken.DAOAdmin)) where
+  _toAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasToAnyChoice GovernanceToken.DAOAdmin GovernanceToken.IssueTokens (CurrentSdk.DA.Internal.LF.ContractId GovernanceToken.GovernanceToken)) where
+  _toAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasToAnyChoice GovernanceToken.DAOAdmin CurrentSdk.DA.Internal.Template.Archive ()) where
+  _toAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasToAnyChoice GovernanceToken.DAOAdmin GovernanceToken.AddMember (CurrentSdk.DA.Internal.LF.ContractId GovernanceToken.DAOAdmin)) where
+  _toAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasTemplateTypeRep GovernanceToken.TokenIssuanceRequest) where
+  _templateTypeRep _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasTemplateTypeRep GovernanceToken.GovernanceToken) where
+  _templateTypeRep _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasTemplateTypeRep GovernanceToken.DAOAdmin) where
+  _templateTypeRep _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasSignatory GovernanceToken.TokenIssuanceRequest) where
+  signatory _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasSignatory GovernanceToken.GovernanceToken) where
+  signatory _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasSignatory GovernanceToken.DAOAdmin) where
+  signatory _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasObserver GovernanceToken.TokenIssuanceRequest) where
+  observer _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasObserver GovernanceToken.GovernanceToken) where
+  observer _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasObserver GovernanceToken.DAOAdmin) where
+  observer _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Desugar.HasIsInterfaceType GovernanceToken.TokenIssuanceRequest) where
+  _isInterfaceType _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Desugar.HasIsInterfaceType GovernanceToken.GovernanceToken) where
+  _isInterfaceType _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Desugar.HasIsInterfaceType GovernanceToken.DAOAdmin) where
+  _isInterfaceType _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasFromAnyTemplate GovernanceToken.TokenIssuanceRequest) where
+  _fromAnyTemplate _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasFromAnyTemplate GovernanceToken.GovernanceToken) where
+  _fromAnyTemplate _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasFromAnyTemplate GovernanceToken.DAOAdmin) where
+  _fromAnyTemplate _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasFromAnyChoice GovernanceToken.TokenIssuanceRequest GovernanceToken.RejectIssuance ()) where
+  _fromAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasFromAnyChoice GovernanceToken.TokenIssuanceRequest CurrentSdk.DA.Internal.Template.Archive ()) where
+  _fromAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasFromAnyChoice GovernanceToken.TokenIssuanceRequest GovernanceToken.AcceptIssuance (CurrentSdk.DA.Internal.LF.ContractId GovernanceToken.GovernanceToken)) where
+  _fromAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasFromAnyChoice GovernanceToken.GovernanceToken GovernanceToken.Transfer (CurrentSdk.DA.Internal.LF.ContractId GovernanceToken.GovernanceToken)) where
+  _fromAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasFromAnyChoice GovernanceToken.GovernanceToken GovernanceToken.Split (((,) (CurrentSdk.DA.Internal.LF.ContractId GovernanceToken.GovernanceToken)) (CurrentSdk.DA.Internal.LF.ContractId GovernanceToken.GovernanceToken))) where
+  _fromAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasFromAnyChoice GovernanceToken.GovernanceToken GovernanceToken.Spend ()) where
+  _fromAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasFromAnyChoice GovernanceToken.GovernanceToken GovernanceToken.Merge (CurrentSdk.DA.Internal.LF.ContractId GovernanceToken.GovernanceToken)) where
+  _fromAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasFromAnyChoice GovernanceToken.GovernanceToken CurrentSdk.DA.Internal.Template.Archive ()) where
+  _fromAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasFromAnyChoice GovernanceToken.DAOAdmin GovernanceToken.RemoveMember (CurrentSdk.DA.Internal.LF.ContractId GovernanceToken.DAOAdmin)) where
+  _fromAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasFromAnyChoice GovernanceToken.DAOAdmin GovernanceToken.IssueTokens (CurrentSdk.DA.Internal.LF.ContractId GovernanceToken.GovernanceToken)) where
+  _fromAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasFromAnyChoice GovernanceToken.DAOAdmin CurrentSdk.DA.Internal.Template.Archive ()) where
+  _fromAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasFromAnyChoice GovernanceToken.DAOAdmin GovernanceToken.AddMember (CurrentSdk.DA.Internal.LF.ContractId GovernanceToken.DAOAdmin)) where
+  _fromAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasFetch GovernanceToken.TokenIssuanceRequest) where
+  fetch _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasFetch GovernanceToken.GovernanceToken) where
+  fetch _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasFetch GovernanceToken.DAOAdmin) where
+  fetch _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasExercise GovernanceToken.TokenIssuanceRequest GovernanceToken.RejectIssuance ()) where
+  exercise _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasExercise GovernanceToken.TokenIssuanceRequest CurrentSdk.DA.Internal.Template.Archive ()) where
+  exercise _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasExercise GovernanceToken.TokenIssuanceRequest GovernanceToken.AcceptIssuance (CurrentSdk.DA.Internal.LF.ContractId GovernanceToken.GovernanceToken)) where
+  exercise _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasExercise GovernanceToken.GovernanceToken GovernanceToken.Transfer (CurrentSdk.DA.Internal.LF.ContractId GovernanceToken.GovernanceToken)) where
+  exercise _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasExercise GovernanceToken.GovernanceToken GovernanceToken.Split (((,) (CurrentSdk.DA.Internal.LF.ContractId GovernanceToken.GovernanceToken)) (CurrentSdk.DA.Internal.LF.ContractId GovernanceToken.GovernanceToken))) where
+  exercise _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasExercise GovernanceToken.GovernanceToken GovernanceToken.Spend ()) where
+  exercise _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasExercise GovernanceToken.GovernanceToken GovernanceToken.Merge (CurrentSdk.DA.Internal.LF.ContractId GovernanceToken.GovernanceToken)) where
+  exercise _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasExercise GovernanceToken.GovernanceToken CurrentSdk.DA.Internal.Template.Archive ()) where
+  exercise _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasExercise GovernanceToken.DAOAdmin GovernanceToken.RemoveMember (CurrentSdk.DA.Internal.LF.ContractId GovernanceToken.DAOAdmin)) where
+  exercise _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasExercise GovernanceToken.DAOAdmin GovernanceToken.IssueTokens (CurrentSdk.DA.Internal.LF.ContractId GovernanceToken.GovernanceToken)) where
+  exercise _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasExercise GovernanceToken.DAOAdmin CurrentSdk.DA.Internal.Template.Archive ()) where
+  exercise _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasExercise GovernanceToken.DAOAdmin GovernanceToken.AddMember (CurrentSdk.DA.Internal.LF.ContractId GovernanceToken.DAOAdmin)) where
+  exercise _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasEnsure GovernanceToken.TokenIssuanceRequest) where
+  ensure _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasEnsure GovernanceToken.GovernanceToken) where
+  ensure _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasEnsure GovernanceToken.DAOAdmin) where
+  ensure _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasCreate GovernanceToken.TokenIssuanceRequest) where
+  create _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasCreate GovernanceToken.GovernanceToken) where
+  create _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasCreate GovernanceToken.DAOAdmin) where
+  create _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasArchive GovernanceToken.TokenIssuanceRequest) where
+  archive _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasArchive GovernanceToken.GovernanceToken) where
+  archive _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasArchive GovernanceToken.DAOAdmin) where
+  archive _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "tokenSymbol" GovernanceToken.DAOAdmin CurrentSdk.GHC.Types.Text)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "symbol" GovernanceToken.TokenIssuanceRequest CurrentSdk.GHC.Types.Text)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "symbol" GovernanceToken.GovernanceToken CurrentSdk.GHC.Types.Text)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "splitAmount" GovernanceToken.Split (CurrentSdk.GHC.Types.Numeric 10))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "recipient" GovernanceToken.TokenIssuanceRequest CurrentSdk.DA.Internal.LF.Party)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "recipient" GovernanceToken.IssueTokens CurrentSdk.DA.Internal.LF.Party)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "owner" GovernanceToken.GovernanceToken CurrentSdk.DA.Internal.LF.Party)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "otherCid" GovernanceToken.Merge (CurrentSdk.DA.Internal.LF.ContractId GovernanceToken.GovernanceToken))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "newOwner" GovernanceToken.Transfer CurrentSdk.DA.Internal.LF.Party)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "newMember" GovernanceToken.AddMember CurrentSdk.DA.Internal.LF.Party)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "members" GovernanceToken.DAOAdmin ([] CurrentSdk.DA.Internal.LF.Party))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "memberToRemove" GovernanceToken.RemoveMember CurrentSdk.DA.Internal.LF.Party)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "issuer" GovernanceToken.TokenIssuanceRequest CurrentSdk.DA.Internal.LF.Party)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "issuer" GovernanceToken.GovernanceToken CurrentSdk.DA.Internal.LF.Party)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "daoName" GovernanceToken.DAOAdmin CurrentSdk.GHC.Types.Text)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "amount" GovernanceToken.TokenIssuanceRequest (CurrentSdk.GHC.Types.Numeric 10))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "amount" GovernanceToken.IssueTokens (CurrentSdk.GHC.Types.Numeric 10))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "amount" GovernanceToken.GovernanceToken (CurrentSdk.GHC.Types.Numeric 10))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "admin" GovernanceToken.DAOAdmin CurrentSdk.DA.Internal.LF.Party)
+instance (() =>
+          Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Classes.Eq GovernanceToken.Transfer) where
+  (==) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (/=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Classes.Eq GovernanceToken.TokenIssuanceRequest) where
+  (==) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (/=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Classes.Eq GovernanceToken.Split) where
+  (==) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (/=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Classes.Eq GovernanceToken.Spend) where
+  (==) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (/=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Classes.Eq GovernanceToken.RemoveMember) where
+  (==) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (/=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Classes.Eq GovernanceToken.RejectIssuance) where
+  (==) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (/=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Classes.Eq GovernanceToken.Merge) where
+  (==) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (/=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Classes.Eq GovernanceToken.IssueTokens) where
+  (==) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (/=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Classes.Eq GovernanceToken.GovernanceToken) where
+  (==) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (/=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Classes.Eq GovernanceToken.DAOAdmin) where
+  (==) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (/=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Classes.Eq GovernanceToken.AddMember) where
+  (==) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (/=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Classes.Eq GovernanceToken.AcceptIssuance) where
+  (==) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (/=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))

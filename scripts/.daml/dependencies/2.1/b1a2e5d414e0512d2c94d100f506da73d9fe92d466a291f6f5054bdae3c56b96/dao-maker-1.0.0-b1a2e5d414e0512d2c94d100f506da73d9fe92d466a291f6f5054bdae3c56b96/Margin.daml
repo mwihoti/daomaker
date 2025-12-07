@@ -1,0 +1,322 @@
+-- Margin Protocol Module
+-- DAO-governed margin trading with collateral management and liquidation
+
+module Margin where
+
+import GovernanceToken
+import Governance
+
+data PositionType = Long | Short
+  deriving (Eq, Show)
+
+data SettlementStatus = Pending | Settled | Failed
+  deriving (Eq, Show)
+
+-- Margin account for users
+template MarginAccount
+  with
+    owner : Party
+    dao : Party
+    collateralAmount : Decimal  -- Amount of collateral tokens
+    borrowedAmount : Decimal    -- Amount borrowed (in same token units)
+    marginRatio : Decimal       -- Current margin ratio (collateral / borrowed)
+    maintenanceMargin : Decimal -- Minimum required margin ratio (e.g., 1.5)
+    liquidationPrice : Decimal  -- Price at which liquidation occurs
+    lastUpdated : Time
+  where
+    signatory dao
+    observer owner
+
+    ensure collateralAmount >= 0.0 && borrowedAmount >= 0.0 && marginRatio >= 0.0 && maintenanceMargin > 1.0
+
+    -- Deposit collateral
+    choice DepositCollateral : ContractId MarginAccount
+      with
+        tokenCid : ContractId GovernanceToken
+        amount : Decimal
+      controller owner, dao
+      do
+        token <- fetch tokenCid
+        assertMsg "Token owner must be depositor" (token.owner == owner)
+        assertMsg "Token issuer must be DAO" (token.issuer == dao)
+        assertMsg "Deposit amount must be positive" (amount > 0.0)
+        assertMsg "Token amount must be sufficient" (token.amount >= amount)
+
+        -- Archive the token being deposited
+        exercise tokenCid Spend
+
+        -- Update margin ratio
+        let newCollateral = collateralAmount + amount
+        let newRatio = if borrowedAmount == 0.0 then 999.0 else newCollateral / borrowedAmount
+
+        currentTime <- getTime
+        create this with
+          collateralAmount = newCollateral
+          marginRatio = newRatio
+          lastUpdated = currentTime
+
+    -- Borrow against collateral
+    choice Borrow : ContractId MarginAccount
+      with
+        borrowAmount : Decimal
+        treasuryCid : ContractId Treasury
+      controller owner, dao
+      do
+        assertMsg "Borrow amount must be positive" (borrowAmount > 0.0)
+        let newBorrowed = borrowedAmount + borrowAmount
+        let newRatio = collateralAmount / newBorrowed
+        assertMsg "Insufficient collateral for borrow" (newRatio >= maintenanceMargin)
+
+        -- Transfer from treasury (simulating lending pool)
+        treasury <- fetch treasuryCid
+        assertMsg "Treasury must have sufficient funds" (treasury.balance >= borrowAmount)
+
+        newTreasuryCid <- exercise treasuryCid TransferFromTreasury with
+          recipient = owner
+          amount = borrowAmount
+          reason = "Margin borrow"
+
+        currentTime <- getTime
+        create this with
+          borrowedAmount = newBorrowed
+          marginRatio = newRatio
+          lastUpdated = currentTime
+
+    -- Repay borrowed amount
+    choice Repay : ContractId MarginAccount
+      with
+        tokenCid : ContractId GovernanceToken
+        repayAmount : Decimal
+        treasuryCid : ContractId Treasury
+      controller owner, dao
+      do
+        token <- fetch tokenCid
+        assertMsg "Token owner must be repayer" (token.owner == owner)
+        assertMsg "Repay amount must be positive" (repayAmount > 0.0)
+        assertMsg "Cannot repay more than borrowed" (repayAmount <= borrowedAmount)
+        assertMsg "Token amount must be sufficient" (token.amount >= repayAmount)
+
+        -- If token amount > repayAmount, split the token
+        repayTokenCid <- if token.amount > repayAmount
+                         then do
+                           (repayCid, remainingCid) <- exercise tokenCid Split with splitAmount = repayAmount
+                           return repayCid
+                         else return tokenCid
+
+        -- Deposit repayment to treasury
+        newTreasuryCid <- exercise treasuryCid DepositToTreasury with
+          depositor = owner
+          tokenCid = repayTokenCid
+
+        let newBorrowed = borrowedAmount - repayAmount
+        let newRatio = if newBorrowed == 0.0 then 999.0 else collateralAmount / newBorrowed
+
+        currentTime <- getTime
+        create this with
+          borrowedAmount = newBorrowed
+          marginRatio = newRatio
+          lastUpdated = currentTime
+
+    -- Withdraw collateral (if margin allows)
+    choice WithdrawCollateral : (ContractId MarginAccount, ContractId GovernanceToken)
+      with
+        withdrawAmount : Decimal
+      controller owner
+      do
+        assertMsg "Withdraw amount must be positive" (withdrawAmount > 0.0)
+        assertMsg "Insufficient collateral" (withdrawAmount <= collateralAmount)
+
+        let remainingCollateral = collateralAmount - withdrawAmount
+        let newRatio = if borrowedAmount == 0.0 then 999.0 else remainingCollateral / borrowedAmount
+        assertMsg "Withdrawal would violate maintenance margin" (newRatio >= maintenanceMargin)
+
+        -- Create token for withdrawal
+        tokenCid <- create GovernanceToken with
+          issuer = dao
+          owner = owner
+          amount = withdrawAmount
+          symbol = "MARGIN"  -- Assuming token symbol
+
+        currentTime <- getTime
+        newAccountCid <- create this with
+          collateralAmount = remainingCollateral
+          marginRatio = newRatio
+          lastUpdated = currentTime
+
+        return (newAccountCid, tokenCid)
+
+    -- Check margin health (owner can call to check their margin)
+    nonconsuming choice CheckMarginHealth : Bool
+      controller owner
+      do
+        return (marginRatio >= maintenanceMargin)
+
+    -- Liquidate under-collateralized position
+    choice Liquidate : ContractId MarginAccount
+      with
+        liquidator : Party
+        treasuryCid : ContractId Treasury
+      controller liquidator
+      do
+        assertMsg "Position must be under-collateralized" (marginRatio < maintenanceMargin)
+        assertMsg "Cannot liquidate own position" (liquidator /= owner)
+
+        -- Transfer collateral to treasury (liquidation penalty)
+        liquidationTokenCid <- create GovernanceToken with
+          issuer = dao
+          owner = dao  -- Treasury will claim
+          amount = collateralAmount
+          symbol = "MARGIN"
+
+        -- Deposit to treasury
+        newTreasuryCid <- exercise treasuryCid DepositToTreasury with
+          depositor = dao
+          tokenCid = liquidationTokenCid
+
+        -- Close the margin account
+        currentTime <- getTime
+        create this with
+          collateralAmount = 0.0
+          borrowedAmount = 0.0
+          marginRatio = 0.0
+          lastUpdated = currentTime
+
+-- Margin position (long/short trades)
+template MarginPosition
+  with
+    owner : Party
+    dao : Party
+    marginAccountCid : ContractId MarginAccount
+    positionType : PositionType  -- Long or Short
+    asset : Text                 -- Asset being traded
+    entryPrice : Decimal
+    quantity : Decimal
+    leverage : Decimal
+    currentPrice : Decimal       -- Updated by oracles/proposals
+    pnl : Decimal               -- Unrealized P&L
+    marginUsed : Decimal
+  where
+    signatory owner, dao
+
+    ensure quantity > 0.0 && leverage >= 1.0 && marginUsed > 0.0
+
+    -- Update position with new price (oracle update)
+    choice UpdatePrice : ContractId MarginPosition
+      with
+        newPrice : Decimal
+        updater : Party
+      controller updater  -- Could be oracle or DAO
+      do
+        let priceChange = newPrice - entryPrice
+        let newPnl = case positionType of
+              Long -> (priceChange / entryPrice) * quantity * leverage
+              Short -> -(priceChange / entryPrice) * quantity * leverage
+
+        create this with
+          currentPrice = newPrice
+          pnl = newPnl
+
+    -- Close position
+    choice ClosePosition : ContractId MarginAccount
+      with
+        exitPrice : Decimal
+      controller owner
+      do
+        let priceChange = exitPrice - entryPrice
+        let finalPnl = case positionType of
+              Long -> (priceChange / entryPrice) * quantity * leverage
+              Short -> -(priceChange / entryPrice) * quantity * leverage
+
+        -- Update margin account with realized P&L
+        marginAccount <- fetch marginAccountCid
+        let newCollateral = marginAccount.collateralAmount + finalPnl
+        let newRatio = if marginAccount.borrowedAmount == 0.0 then 999.0 else newCollateral / marginAccount.borrowedAmount
+
+        currentTime <- getTime
+        newMarginAccountCid <- create marginAccount with
+          collateralAmount = newCollateral
+          marginRatio = newRatio
+          lastUpdated = currentTime
+
+        -- Archive this position (implicitly by not recreating it)
+        return newMarginAccountCid
+
+-- Privacy-focused confidential margin settlement
+-- Using Canton confidential contracts for private amounts
+template ConfidentialMarginSettlement
+  with
+    borrower : Party
+    lender : Party
+    dao : Party
+    confidentialAmount : Text  -- Encrypted amount (in Canton confidential contract)
+    settlementTime : Time
+    status : SettlementStatus
+  where
+    signatory borrower, lender
+    observer dao  -- DAO can observe but amounts are confidential
+
+    ensure confidentialAmount /= ""
+
+    -- Confidential settlement (amounts remain private)
+    choice ExecuteConfidentialSettlement : ContractId ConfidentialMarginSettlement
+      with
+        settlementProof : Text  -- Proof of settlement (hash or signature)
+      controller borrower, lender
+      do
+        -- In Canton, this would use confidential contract features
+        -- For now, simulate with status update
+        currentTime <- getTime
+        assertMsg "Settlement time not reached" (currentTime >= settlementTime)
+
+        create this with
+          status = Settled
+
+    -- DAO can force settlement in case of dispute
+    choice ForceSettlement : ContractId ConfidentialMarginSettlement
+      with
+        daoApproval : Bool
+      controller dao
+      do
+        assertMsg "DAO must approve" daoApproval
+        create this with
+          status = Settled
+
+-- Emergency Pause Control for Risk Management
+-- DAO can pause all margin operations in case of emergency
+template EmergencyPauseControl
+  with
+    dao : Party
+    pausedAt : Time
+    reason : Text
+    isPaused : Bool
+  where
+    signatory dao
+
+    ensure reason /= ""
+
+    -- Trigger emergency pause (freeze all operations)
+    choice TriggerEmergencyPause : ContractId EmergencyPauseControl
+      with
+        reason : Text
+      controller dao
+      do
+        create this with
+          isPaused = True
+          reason = reason
+
+    -- Resume normal operations after verification
+    choice ResumeOperations : ContractId EmergencyPauseControl
+      with
+        verificationHash : Text
+      controller dao
+      do
+        assertMsg "Verification hash required" (verificationHash /= "")
+        create this with
+          isPaused = False
+          reason = "Normal operations resumed"
+
+    -- Query if system is paused
+    nonconsuming choice CheckPauseStatus : Bool
+      controller dao
+      do
+        return isPaused

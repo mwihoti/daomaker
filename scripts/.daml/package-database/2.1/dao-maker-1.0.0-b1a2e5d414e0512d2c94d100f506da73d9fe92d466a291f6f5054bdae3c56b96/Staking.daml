@@ -1,0 +1,688 @@
+{-# LANGUAGE NoDamlSyntax #-}
+{-# LANGUAGE NoImplicitPrelude #-}
+{-# LANGUAGE NoOverloadedStrings #-}
+{-# LANGUAGE TypeOperators #-}
+{-# LANGUAGE UndecidableInstances #-}
+{-# LANGUAGE AllowAmbiguousTypes #-}
+{-# LANGUAGE MagicHash #-}
+{-# LANGUAGE DatatypeContexts #-}
+{-# OPTIONS_GHC -Wno-unused-imports -Wno-missing-methods -Wno-deprecations -Wno-x-exceptions -Wno-x-ledger-time -Wno-x-crypto #-}
+module Staking (
+        type Staking.IncreaseStake(Staking.IncreaseStake, tokenCid),
+        type Staking.DecreaseStake(Staking.DecreaseStake, currentTime,
+                                   withdrawAmount),
+        type Staking.Unstake(Staking.Unstake, currentTime),
+        type Staking.LockStake(Staking.LockStake, lockUntilTime),
+        type Staking.UnlockStake(Staking.UnlockStake),
+        type Staking.GetVotingPower(Staking.GetVotingPower),
+        type Staking.StakingPool(Staking.StakingPool, dao, stakers,
+                                 tokenSymbol, totalStaked),
+        type Staking.Stake(Staking.Stake, staker, tokenCid),
+        type Staking.StakedPosition(Staking.StakedPosition, amount, dao,
+                                    lockedUntil, stakedAt, staker, tokenSymbol),
+        type Staking.StakingRequest(Staking.StakingRequest, dao, poolCid,
+                                    staker, tokenCid),
+        type Staking.ExecuteStake(Staking.ExecuteStake)
+    ) where
+import Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Desugar
+import Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Exception
+    ()
+import Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Fail
+    ()
+import Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Interface.AnyView
+    ()
+import CurrentSdk.DA.Internal.LF
+import CurrentSdk.DA.Internal.Prelude
+import Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Prelude
+    ()
+import Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record
+import CurrentSdk.DA.Internal.Template
+import Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions
+import Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions
+    ()
+import CurrentSdk.Data.String
+import Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Classes
+import CurrentSdk.GHC.Err
+import Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Show
+import CurrentSdk.GHC.Types
+import GovernanceToken
+data ExecuteStake = ExecuteStake {}
+data CurrentSdk.GHC.Types.DamlTemplate => StakingRequest
+  = StakingRequest {dao :: CurrentSdk.DA.Internal.LF.Party,
+                    staker :: CurrentSdk.DA.Internal.LF.Party,
+                    tokenCid :: (CurrentSdk.DA.Internal.LF.ContractId GovernanceToken.GovernanceToken),
+                    poolCid :: (CurrentSdk.DA.Internal.LF.ContractId Staking.StakingPool)}
+data Stake
+  = Stake {staker :: CurrentSdk.DA.Internal.LF.Party,
+           tokenCid :: (CurrentSdk.DA.Internal.LF.ContractId GovernanceToken.GovernanceToken)}
+data CurrentSdk.GHC.Types.DamlTemplate => StakingPool
+  = StakingPool {dao :: CurrentSdk.DA.Internal.LF.Party,
+                 tokenSymbol :: CurrentSdk.GHC.Types.Text,
+                 totalStaked :: (CurrentSdk.GHC.Types.Numeric 10),
+                 stakers :: ([] CurrentSdk.DA.Internal.LF.Party)}
+data GetVotingPower = GetVotingPower {}
+data UnlockStake = UnlockStake {}
+data LockStake
+  = LockStake {lockUntilTime :: CurrentSdk.DA.Internal.LF.Time}
+data Unstake
+  = Unstake {currentTime :: CurrentSdk.DA.Internal.LF.Time}
+data DecreaseStake
+  = DecreaseStake {withdrawAmount :: (CurrentSdk.GHC.Types.Numeric 10),
+                   currentTime :: CurrentSdk.DA.Internal.LF.Time}
+data IncreaseStake
+  = IncreaseStake {tokenCid :: (CurrentSdk.DA.Internal.LF.ContractId GovernanceToken.GovernanceToken)}
+data CurrentSdk.GHC.Types.DamlTemplate => StakedPosition
+  = StakedPosition {dao :: CurrentSdk.DA.Internal.LF.Party,
+                    staker :: CurrentSdk.DA.Internal.LF.Party,
+                    amount :: (CurrentSdk.GHC.Types.Numeric 10),
+                    stakedAt :: CurrentSdk.DA.Internal.LF.Time,
+                    tokenSymbol :: CurrentSdk.GHC.Types.Text,
+                    lockedUntil :: (CurrentSdk.DA.Internal.Prelude.Optional CurrentSdk.DA.Internal.LF.Time)}
+instance (() =>
+          Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Show.Show Staking.Unstake) where
+  showsPrec _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  show _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  showList _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Show.Show Staking.UnlockStake) where
+  showsPrec _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  show _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  showList _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Show.Show Staking.StakingRequest) where
+  showsPrec _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  show _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  showList _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Show.Show Staking.StakingPool) where
+  showsPrec _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  show _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  showList _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Show.Show Staking.StakedPosition) where
+  showsPrec _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  show _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  showList _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Show.Show Staking.Stake) where
+  showsPrec _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  show _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  showList _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Show.Show Staking.LockStake) where
+  showsPrec _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  show _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  showList _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Show.Show Staking.IncreaseStake) where
+  showsPrec _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  show _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  showList _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Show.Show Staking.GetVotingPower) where
+  showsPrec _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  show _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  showList _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Show.Show Staking.ExecuteStake) where
+  showsPrec _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  show _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  showList _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Show.Show Staking.DecreaseStake) where
+  showsPrec _ _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  show _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  showList _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "withdrawAmount" Staking.DecreaseStake (CurrentSdk.GHC.Types.Numeric 10))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "totalStaked" Staking.StakingPool (CurrentSdk.GHC.Types.Numeric 10))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "tokenSymbol" Staking.StakingPool CurrentSdk.GHC.Types.Text)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "tokenSymbol" Staking.StakedPosition CurrentSdk.GHC.Types.Text)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "tokenCid" Staking.StakingRequest (CurrentSdk.DA.Internal.LF.ContractId GovernanceToken.GovernanceToken))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "tokenCid" Staking.Stake (CurrentSdk.DA.Internal.LF.ContractId GovernanceToken.GovernanceToken))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "tokenCid" Staking.IncreaseStake (CurrentSdk.DA.Internal.LF.ContractId GovernanceToken.GovernanceToken))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "stakers" Staking.StakingPool ([] CurrentSdk.DA.Internal.LF.Party))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "staker" Staking.StakingRequest CurrentSdk.DA.Internal.LF.Party)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "staker" Staking.StakedPosition CurrentSdk.DA.Internal.LF.Party)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "staker" Staking.Stake CurrentSdk.DA.Internal.LF.Party)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "stakedAt" Staking.StakedPosition CurrentSdk.DA.Internal.LF.Time)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "poolCid" Staking.StakingRequest (CurrentSdk.DA.Internal.LF.ContractId Staking.StakingPool))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "lockedUntil" Staking.StakedPosition (CurrentSdk.DA.Internal.Prelude.Optional CurrentSdk.DA.Internal.LF.Time))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "lockUntilTime" Staking.LockStake CurrentSdk.DA.Internal.LF.Time)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "dao" Staking.StakingRequest CurrentSdk.DA.Internal.LF.Party)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "dao" Staking.StakingPool CurrentSdk.DA.Internal.LF.Party)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "dao" Staking.StakedPosition CurrentSdk.DA.Internal.LF.Party)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "currentTime" Staking.Unstake CurrentSdk.DA.Internal.LF.Time)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "currentTime" Staking.DecreaseStake CurrentSdk.DA.Internal.LF.Time)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.SetField "amount" Staking.StakedPosition (CurrentSdk.GHC.Types.Numeric 10))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasToAnyTemplate Staking.StakingRequest) where
+  _toAnyTemplate _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasToAnyTemplate Staking.StakingPool) where
+  _toAnyTemplate _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasToAnyTemplate Staking.StakedPosition) where
+  _toAnyTemplate _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasToAnyChoice Staking.StakingRequest Staking.ExecuteStake (CurrentSdk.DA.Internal.LF.ContractId Staking.StakedPosition)) where
+  _toAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasToAnyChoice Staking.StakingRequest CurrentSdk.DA.Internal.Template.Archive ()) where
+  _toAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasToAnyChoice Staking.StakingPool Staking.Stake (CurrentSdk.DA.Internal.LF.ContractId Staking.StakedPosition)) where
+  _toAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasToAnyChoice Staking.StakingPool CurrentSdk.DA.Internal.Template.Archive ()) where
+  _toAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasToAnyChoice Staking.StakedPosition Staking.Unstake (CurrentSdk.DA.Internal.LF.ContractId GovernanceToken.GovernanceToken)) where
+  _toAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasToAnyChoice Staking.StakedPosition Staking.UnlockStake (CurrentSdk.DA.Internal.LF.ContractId Staking.StakedPosition)) where
+  _toAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasToAnyChoice Staking.StakedPosition Staking.LockStake (CurrentSdk.DA.Internal.LF.ContractId Staking.StakedPosition)) where
+  _toAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasToAnyChoice Staking.StakedPosition Staking.IncreaseStake (CurrentSdk.DA.Internal.LF.ContractId Staking.StakedPosition)) where
+  _toAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasToAnyChoice Staking.StakedPosition Staking.GetVotingPower (CurrentSdk.GHC.Types.Numeric 10)) where
+  _toAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasToAnyChoice Staking.StakedPosition Staking.DecreaseStake (((,) (CurrentSdk.DA.Internal.LF.ContractId Staking.StakedPosition)) (CurrentSdk.DA.Internal.LF.ContractId GovernanceToken.GovernanceToken))) where
+  _toAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasToAnyChoice Staking.StakedPosition CurrentSdk.DA.Internal.Template.Archive ()) where
+  _toAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasTemplateTypeRep Staking.StakingRequest) where
+  _templateTypeRep _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasTemplateTypeRep Staking.StakingPool) where
+  _templateTypeRep _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasTemplateTypeRep Staking.StakedPosition) where
+  _templateTypeRep _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasSignatory Staking.StakingRequest) where
+  signatory _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasSignatory Staking.StakingPool) where
+  signatory _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasSignatory Staking.StakedPosition) where
+  signatory _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasObserver Staking.StakingRequest) where
+  observer _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasObserver Staking.StakingPool) where
+  observer _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasObserver Staking.StakedPosition) where
+  observer _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Desugar.HasIsInterfaceType Staking.StakingRequest) where
+  _isInterfaceType _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Desugar.HasIsInterfaceType Staking.StakingPool) where
+  _isInterfaceType _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Desugar.HasIsInterfaceType Staking.StakedPosition) where
+  _isInterfaceType _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasFromAnyTemplate Staking.StakingRequest) where
+  _fromAnyTemplate _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasFromAnyTemplate Staking.StakingPool) where
+  _fromAnyTemplate _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasFromAnyTemplate Staking.StakedPosition) where
+  _fromAnyTemplate _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasFromAnyChoice Staking.StakingRequest Staking.ExecuteStake (CurrentSdk.DA.Internal.LF.ContractId Staking.StakedPosition)) where
+  _fromAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasFromAnyChoice Staking.StakingRequest CurrentSdk.DA.Internal.Template.Archive ()) where
+  _fromAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasFromAnyChoice Staking.StakingPool Staking.Stake (CurrentSdk.DA.Internal.LF.ContractId Staking.StakedPosition)) where
+  _fromAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasFromAnyChoice Staking.StakingPool CurrentSdk.DA.Internal.Template.Archive ()) where
+  _fromAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasFromAnyChoice Staking.StakedPosition Staking.Unstake (CurrentSdk.DA.Internal.LF.ContractId GovernanceToken.GovernanceToken)) where
+  _fromAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasFromAnyChoice Staking.StakedPosition Staking.UnlockStake (CurrentSdk.DA.Internal.LF.ContractId Staking.StakedPosition)) where
+  _fromAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasFromAnyChoice Staking.StakedPosition Staking.LockStake (CurrentSdk.DA.Internal.LF.ContractId Staking.StakedPosition)) where
+  _fromAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasFromAnyChoice Staking.StakedPosition Staking.IncreaseStake (CurrentSdk.DA.Internal.LF.ContractId Staking.StakedPosition)) where
+  _fromAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasFromAnyChoice Staking.StakedPosition Staking.GetVotingPower (CurrentSdk.GHC.Types.Numeric 10)) where
+  _fromAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasFromAnyChoice Staking.StakedPosition Staking.DecreaseStake (((,) (CurrentSdk.DA.Internal.LF.ContractId Staking.StakedPosition)) (CurrentSdk.DA.Internal.LF.ContractId GovernanceToken.GovernanceToken))) where
+  _fromAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasFromAnyChoice Staking.StakedPosition CurrentSdk.DA.Internal.Template.Archive ()) where
+  _fromAnyChoice _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasFetch Staking.StakingRequest) where
+  fetch _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasFetch Staking.StakingPool) where
+  fetch _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasFetch Staking.StakedPosition) where
+  fetch _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasExercise Staking.StakingRequest Staking.ExecuteStake (CurrentSdk.DA.Internal.LF.ContractId Staking.StakedPosition)) where
+  exercise _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasExercise Staking.StakingRequest CurrentSdk.DA.Internal.Template.Archive ()) where
+  exercise _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasExercise Staking.StakingPool Staking.Stake (CurrentSdk.DA.Internal.LF.ContractId Staking.StakedPosition)) where
+  exercise _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasExercise Staking.StakingPool CurrentSdk.DA.Internal.Template.Archive ()) where
+  exercise _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasExercise Staking.StakedPosition Staking.Unstake (CurrentSdk.DA.Internal.LF.ContractId GovernanceToken.GovernanceToken)) where
+  exercise _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasExercise Staking.StakedPosition Staking.UnlockStake (CurrentSdk.DA.Internal.LF.ContractId Staking.StakedPosition)) where
+  exercise _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasExercise Staking.StakedPosition Staking.LockStake (CurrentSdk.DA.Internal.LF.ContractId Staking.StakedPosition)) where
+  exercise _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasExercise Staking.StakedPosition Staking.IncreaseStake (CurrentSdk.DA.Internal.LF.ContractId Staking.StakedPosition)) where
+  exercise _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasExercise Staking.StakedPosition Staking.GetVotingPower (CurrentSdk.GHC.Types.Numeric 10)) where
+  exercise _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasExercise Staking.StakedPosition Staking.DecreaseStake (((,) (CurrentSdk.DA.Internal.LF.ContractId Staking.StakedPosition)) (CurrentSdk.DA.Internal.LF.ContractId GovernanceToken.GovernanceToken))) where
+  exercise _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasExercise Staking.StakedPosition CurrentSdk.DA.Internal.Template.Archive ()) where
+  exercise _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasEnsure Staking.StakingRequest) where
+  ensure _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasEnsure Staking.StakingPool) where
+  ensure _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasEnsure Staking.StakedPosition) where
+  ensure _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasCreate Staking.StakingRequest) where
+  create _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasCreate Staking.StakingPool) where
+  create _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasCreate Staking.StakedPosition) where
+  create _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasArchive Staking.StakingRequest) where
+  archive _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasArchive Staking.StakingPool) where
+  archive _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Template.Functions.HasArchive Staking.StakedPosition) where
+  archive _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "withdrawAmount" Staking.DecreaseStake (CurrentSdk.GHC.Types.Numeric 10))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "totalStaked" Staking.StakingPool (CurrentSdk.GHC.Types.Numeric 10))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "tokenSymbol" Staking.StakingPool CurrentSdk.GHC.Types.Text)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "tokenSymbol" Staking.StakedPosition CurrentSdk.GHC.Types.Text)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "tokenCid" Staking.StakingRequest (CurrentSdk.DA.Internal.LF.ContractId GovernanceToken.GovernanceToken))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "tokenCid" Staking.Stake (CurrentSdk.DA.Internal.LF.ContractId GovernanceToken.GovernanceToken))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "tokenCid" Staking.IncreaseStake (CurrentSdk.DA.Internal.LF.ContractId GovernanceToken.GovernanceToken))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "stakers" Staking.StakingPool ([] CurrentSdk.DA.Internal.LF.Party))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "staker" Staking.StakingRequest CurrentSdk.DA.Internal.LF.Party)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "staker" Staking.StakedPosition CurrentSdk.DA.Internal.LF.Party)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "staker" Staking.Stake CurrentSdk.DA.Internal.LF.Party)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "stakedAt" Staking.StakedPosition CurrentSdk.DA.Internal.LF.Time)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "poolCid" Staking.StakingRequest (CurrentSdk.DA.Internal.LF.ContractId Staking.StakingPool))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "lockedUntil" Staking.StakedPosition (CurrentSdk.DA.Internal.Prelude.Optional CurrentSdk.DA.Internal.LF.Time))
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "lockUntilTime" Staking.LockStake CurrentSdk.DA.Internal.LF.Time)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "dao" Staking.StakingRequest CurrentSdk.DA.Internal.LF.Party)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "dao" Staking.StakingPool CurrentSdk.DA.Internal.LF.Party)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "dao" Staking.StakedPosition CurrentSdk.DA.Internal.LF.Party)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "currentTime" Staking.Unstake CurrentSdk.DA.Internal.LF.Time)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "currentTime" Staking.DecreaseStake CurrentSdk.DA.Internal.LF.Time)
+instance (() =>
+          Pkg_09edf931f4753659b4d84606aaef7de6ba699557ae33afdb688744cb563c71d6.DA.Internal.Record.GetField "amount" Staking.StakedPosition (CurrentSdk.GHC.Types.Numeric 10))
+instance (() =>
+          Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Classes.Eq Staking.Unstake) where
+  (==) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (/=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Classes.Eq Staking.UnlockStake) where
+  (==) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (/=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Classes.Eq Staking.StakingRequest) where
+  (==) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (/=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Classes.Eq Staking.StakingPool) where
+  (==) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (/=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Classes.Eq Staking.StakedPosition) where
+  (==) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (/=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Classes.Eq Staking.Stake) where
+  (==) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (/=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Classes.Eq Staking.LockStake) where
+  (==) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (/=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Classes.Eq Staking.IncreaseStake) where
+  (==) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (/=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Classes.Eq Staking.GetVotingPower) where
+  (==) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (/=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Classes.Eq Staking.ExecuteStake) where
+  (==) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (/=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+instance (() =>
+          Pkg_54f85ebfc7dfae18f7d70370015dcc6c6792f60135ab369c44ae52c6fc17c274.GHC.Classes.Eq Staking.DecreaseStake) where
+  (==) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
+  (/=) _ _
+    = (CurrentSdk.GHC.Err.error
+         (CurrentSdk.Data.String.fromString "data-dependency stub"))
