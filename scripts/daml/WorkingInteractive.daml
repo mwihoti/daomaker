@@ -214,7 +214,7 @@ aliceVotes = script do
     createProposal
   proposalContracts2 <- query @Proposal dao
   assertMsg "No proposal found after setup." (not $ null proposalContracts2)
-  let proposalCid = fst (head proposalContracts2)
+  let (proposalCid, proposalData) = head proposalContracts2
   
   -- Find Alice's stake; setup if missing
   stakeContracts <- query @StakedPosition alice
@@ -225,15 +225,22 @@ aliceVotes = script do
   assertMsg "Alice has no stake after setup." (not $ null stakeContracts2)
   let stakeCid = fst (head stakeContracts2)
   
-  -- Vote
-  newProposalCid <- submit alice do
-    exerciseCmd proposalCid CastVote with
-      voter = alice
-      stakeCid = stakeCid
-      inFavor = True
+  -- Check if Alice has already voted
+  let aliceAlreadyVoted = any (\v -> v.voter == alice) proposalData.votes
   
-  debug "✅ Alice voted!"
-  debug $ "Updated proposal: " <> show newProposalCid
+  if aliceAlreadyVoted
+    then do
+      debug "✅ Alice already voted, skipping..."
+    else do
+      -- Vote
+      newProposalCid <- submit alice do
+        exerciseCmd proposalCid CastVote with
+          voter = alice
+          stakeCid = stakeCid
+          inFavor = True
+      
+      debug "✅ Alice voted!"
+      debug $ "Updated proposal: " <> show newProposalCid
 
 -- 7. Bob votes on proposal
 bobVotes : Script ()
@@ -248,7 +255,7 @@ bobVotes = script do
     createProposal
   proposalContracts2 <- query @Proposal dao
   assertMsg "No proposal found after setup." (not $ null proposalContracts2)
-  let proposalCid = fst (head proposalContracts2)
+  let (proposalCid, proposalData) = head proposalContracts2
   
   -- Find Bob's stake; setup if missing
   stakeContracts <- query @StakedPosition bob
@@ -259,15 +266,22 @@ bobVotes = script do
   assertMsg "Bob has no stake after setup." (not $ null stakeContracts2)
   let stakeCid = fst (head stakeContracts2)
   
-  -- Vote
-  newProposalCid <- submit bob do
-    exerciseCmd proposalCid CastVote with
-      voter = bob
-      stakeCid = stakeCid
-      inFavor = True
+  -- Check if Bob has already voted
+  let bobAlreadyVoted = any (\v -> v.voter == bob) proposalData.votes
   
-  debug "✅ Bob voted!"
-  debug $ "Updated proposal: " <> show newProposalCid
+  if bobAlreadyVoted
+    then do
+      debug "✅ Bob already voted, skipping..."
+    else do
+      -- Vote
+      newProposalCid <- submit bob do
+        exerciseCmd proposalCid CastVote with
+          voter = bob
+          stakeCid = stakeCid
+          inFavor = True
+      
+      debug "✅ Bob voted!"
+      debug $ "Updated proposal: " <> show newProposalCid
 
 -- 8. View DAO status
 viewStatus : Script ()

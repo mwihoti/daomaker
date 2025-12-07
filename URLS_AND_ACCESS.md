@@ -17,7 +17,7 @@
 
 ## 📚 Documentation for Judges (READ IN THIS ORDER)
 
-### **1. Start Here: One-Pager Executive Summary** (3 minutes)
+### **1. Start Here: One-Pager Executive Summary** 
 📄 **File**: [ONEPAGER.md](ONEPAGER.md)  
 📍 **Link**: `/home/daniel/work/daml/dao/ONEPAGER.md`  
 📖 **Content**: High-level overview, key metrics, quick verification

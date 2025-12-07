@@ -31,8 +31,8 @@ Best for: Thorough evaluators
 
 ---
 
-### 🔬 TECHNICAL PATH (90 minutes)
-Best for: Deep technical reviewers
+### 🔬 TECHNICAL PATH
+B
 1. 📊 Complete Standard Path (45 min)
 2. **Clone & Build**:
    ```bash
@@ -45,9 +45,9 @@ Best for: Deep technical reviewers
    - `daml/Margin.daml` - Core margin protocol
    - `daml/GovernanceToken.daml` - Token system
    - `daml/Governance.daml` - Voting & proposals
-4. **[LIVE_TEST_EXECUTION.md](LIVE_TEST_EXECUTION.md)** (5 min) - Understand each TX
+4. **[LIVE_TEST_EXECUTION.md](LIVE_TEST_EXECUTION.md)** Understand each TX
 
-**Result**: Complete confidence in implementation quality
+**
 
 ---
 
@@ -90,15 +90,7 @@ Best for: Deep technical reviewers
 ✅ Margin trading protocol with collateral management  
 ✅ Treasury-backed lending pool  
 ✅ Multi-party authorization security  
-✅ 34+ comprehensive tests proving it works  
-
-### **By The Numbers**
-- **5** Core modules (900+ lines of code, 0 warnings)
-- **5** Test modules (34+ tests, all passing)
-- **120+** Transactions validated
-- **3,752** Lines of documentation
-- **12** Documentation files for judges
-- **100%** Build success rate
+✅ 34+ comprehensive 
 
 ### **Key Proof Points**
 - ✅ `testCompleteWorkflow` (8 contracts, 14 TXs) - Full cycle works
@@ -130,15 +122,12 @@ git clone https://github.com/mwihoti/daomaker.git
 cd daomaker
 daml build && cd scripts && daml build && daml test
 
-# Expected: ✅ 34+ tests passing
-# Time: 5-10 minutes
 ```
-
 ---
 
 ## 📋 Judges' Checklist
 
-### Minimum Evaluation (15 minutes)
+### Minimum Evaluation 
 - [ ] Read ONEPAGER.md
 - [ ] Read JUDGES_GUIDE.md
 - [ ] Visit GitHub repo
