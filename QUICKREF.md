@@ -186,6 +186,32 @@ daml script \
   --ledger-port 6865
 ```
 
+## 🔄 Reset Sandbox & Re-run Workflow
+
+The workflow script creates new contracts on each run. To run it multiple times, reset the sandbox between runs:
+
+```bash
+# Kill sandbox
+pkill -f "daml sandbox" || true
+sleep 2
+
+# Start fresh
+daml sandbox --port 6865 --json-api-port 7575 &
+sleep 6
+
+# Upload DARs
+daml ledger upload-dar .daml/dist/dao-maker-1.0.0.dar --host localhost --port 6865
+daml ledger upload-dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar --host localhost --port 6865
+sleep 1
+
+# Run interactive workflow
+daml script \
+  --dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar \
+  --script-name WorkingInteractive:testCompleteWorkflow \
+  --ledger-host localhost \
+  --ledger-port 6865
+```
+
 ## 📐 Architecture
 
 ```

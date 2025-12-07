@@ -4,7 +4,7 @@ A fully on-chain Decentralized Autonomous Organization (DAO) implementation buil
 
 ## 🔗 Quick Links
 
-- **📊 Demo & Proof of Concept**: [DEMO_PROOF_OF_CONCEPT.md](DEMO_PROOF_OF_CONCEPT.md) - **START HERE FOR JUDGES**
+- **📊 Demo & Proof of Concept**: [DEMO_PROOF_OF_CONCEPT.md](DEMO_PROOF_OF_CONCEPT.md) - 
 - **🎬 Live Test Execution**: [LIVE_TEST_EXECUTION.md](LIVE_TEST_EXECUTION.md) - See actual test output
 - **🏗️ Architecture & Visuals**: [ARCHITECTURE_VISUAL_GUIDE.md](ARCHITECTURE_VISUAL_GUIDE.md) - System design diagrams
 - **📦 Deployment Guide**: [DEPLOYMENT.md](DEPLOYMENT.md) - How to deploy to Canton
@@ -278,22 +278,77 @@ Track DAO health with GovernanceStats:
 
 ## 🚢 Deployment
 
-### Build DAR file:
+### Build both DAR files:
 ```bash
-daml build -o dao-maker.dar
+daml build                    # Builds core templates to .daml/dist/
+cd scripts && daml build      # Builds scripts to scripts/.daml/dist/
+cd ..
 ```
 
-### Deploy to Canton:
+### Deploy to Canton/Sandbox (Fresh Start):
 ```bash
-# Start Canton sandbox
-daml sandbox
+# Start fresh sandbox
+daml sandbox --port 6865 --json-api-port 7575 &
+sleep 6
 
-# Deploy DAR
-daml ledger upload-dar dao-maker.dar --host localhost --port 6865
+# Upload both DARs
+daml ledger upload-dar .daml/dist/dao-maker-1.0.0.dar \
+  --host localhost --port 6865
+
+daml ledger upload-dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar \
+  --host localhost --port 6865
 ```
 
-### Initialize on ledger:
-Use Daml Script or Navigator to:
+### Run Complete Interactive Workflow:
+```bash
+daml script \
+  --dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar \
+  --script-name WorkingInteractive:testCompleteWorkflow \
+  --ledger-host localhost \
+  --ledger-port 6865
+```
+
+#### Output Should Show:
+```
+✅ DAO Created!
+✅ Tokens Issued!
+✅ Alice staked tokens!
+✅ Bob staked tokens!
+✅ Proposal created!
+✅ Alice votes complete - Voting complete
+✅ Margin account created!
+✅ Collateral deposited!
+✅ Borrow complete!
+✅ Complete workflow finished successfully!
+```
+
+### Reset & Re-Run Workflow:
+⚠️ **Important**: The workflow script is NOT idempotent - it creates new contracts on each run. To run it again:
+
+```bash
+# Kill the sandbox
+pkill -f "daml sandbox"
+sleep 2
+
+# Start fresh sandbox
+daml sandbox --port 6865 --json-api-port 7575 &
+sleep 6
+
+# Re-upload DARs
+daml ledger upload-dar .daml/dist/dao-maker-1.0.0.dar --host localhost --port 6865
+daml ledger upload-dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar --host localhost --port 6865
+sleep 1
+
+# Run workflow again
+daml script \
+  --dar scripts/.daml/dist/dao-maker-scripts-1.0.0.dar \
+  --script-name WorkingInteractive:testCompleteWorkflow \
+  --ledger-host localhost \
+  --ledger-port 6865
+```
+
+### Initialize on Ledger (Manual):
+Alternatively, use Daml Script or Navigator to:
 1. Create DAOConfig
 2. Execute InitializeDAO
 3. Issue initial tokens to members
